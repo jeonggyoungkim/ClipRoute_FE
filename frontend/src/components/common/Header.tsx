@@ -6,22 +6,20 @@ interface HeaderProps {
 
 const Header = ({ left, center, right }: HeaderProps) => {
   return (
-    <header className="relative flex items-center h-[56px] px-4 bg-white">
+    <header className="relative flex items-center w-full min-h-[3.5rem] h-[3.5rem] px-4 bg-white shrink-0">
     
-      <div className="flex items-center min-w-[40px]">
-        {left}
-      </div>
+      <div className="flex items-center justify-start min-w-0">
+    {left}
+  </div>
 
-      
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
-        {center}
-      </div>
+  <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
+    {center}
+  </div>
 
-   
-      <div className="ml-auto flex items-center min-w-[40px] justify-end">
-        {right}
-      </div>
-    </header>
+  <div className="ml-auto flex items-center justify-end gap-2">
+    {right}
+  </div>
+</header>
   );
 };
 
