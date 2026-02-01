@@ -62,7 +62,7 @@ const DestinationModal = ({ isOpen, onClose, onSelect }: DestinationModalProps) 
       
       
       <div className="w-full h-full max-w-md mx-auto flex flex-col">
-        
+                                                                        
         
         <div className="relative flex items-center justify-center h-16 shrink-0 border-b border-gray-50">
           <h2 className="text-[18px] font-bold text-black">여행지 선택</h2>
