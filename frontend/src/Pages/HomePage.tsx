@@ -5,6 +5,7 @@ import DestinationModal from '../components/modals/DestinationModal';
 import DateSelectModal from '../components/modals/DateSelectModal';
 import VideoCard from '../components/VideoCard';
 import bellicon from "../assets/icons/bell-icon.svg";
+import logoicon from "../assets/icons/logo-icon.svg";
 
 interface Destination {
   regionId: number;
@@ -62,11 +63,11 @@ const HomePage = () => {
   return (
     <div className="bg-white min-h-screen">
       <Header
-        left={<span className='px-[10px] py-2 text-xl font-semibold text-[#42BCEB]'>Cliproute</span>}
-        right={<img src={bellicon} alt="notifications" className='w-[24px] h-[24px]'/>}
+        left={<img src={logoicon} alt="logo"/>}
+        right={<img src={bellicon} alt="notifications" className='w-5 h-5'/>}
       />
 
-      <main className='px-[20px] pt-6'>
+      <main className='px-5 pt-6'>
         <h1 className="font-sans font-[700] text-[1rem] pb-[15px]">
   대표 여행 유튜버들의 국내 여행 코스를 한 눈에!
 </h1>
