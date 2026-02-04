@@ -15,6 +15,15 @@ export interface SignUpRequest {
     | 'UNKNOWN';
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
 export const signup = (data: SignUpRequest) => {
   return api.post('/api/auth/signup', data);
+};
+
+export const login = (data: LoginRequest) => {
+  return api.post('/api/auth/login', data);
 };

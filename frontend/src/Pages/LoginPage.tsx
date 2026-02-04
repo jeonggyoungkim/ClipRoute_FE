@@ -4,10 +4,11 @@ import usericon from "../assets/icons/user-icon.svg";
 import passwordicon from "../assets/icons/password-icon.svg";
 import useForm from "../hooks/useForm";
 import { validateSignin, type LoginInformation } from "../utils/validate";
-
+import { login } from "../api/auth"; 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [keepLogin, setKeepLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate(); 
 
@@ -19,19 +20,42 @@ export default function LoginPage() {
     validate: validateSignin, 
   });
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     const noErrors = !errors.email && !errors.password;
     const isSubmitted = values.email && values.password;
 
-    if (noErrors && isSubmitted) {
-      console.log("로그인 시도:", { 
-        email: values.email, 
-        password: values.password,
-        keepLogin 
-      });
-      alert("로그인 성공");
-    } else {
+    if (!noErrors || !isSubmitted) {
       alert("입력 정보를 다시 확인해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const response = await login({
+        email: values.email,
+        password: values.password,
+      });
+
+      console.log("로그인 응답:", response.data); // 응답 구조 확인
+      
+      
+      const storage = keepLogin ? localStorage : sessionStorage;
+      
+      // 응답 시 토큰 구조 확인 
+      if (response.data) {
+        storage.setItem("authData", JSON.stringify(response.data));
+      }
+      
+      alert("로그인 성공!");
+      navigate("/"); 
+      
+    } catch (error: any) {
+      console.error("로그인 에러:", error);
+      const errorMessage = error.response?.data?.message || "로그인에 실패했습니다.";
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -107,9 +131,10 @@ export default function LoginPage() {
       <div className="space-y-6">
         <button
           onClick={handleLogin}
-          className="w-full h-14 bg-[#42BCEB] text-white text-lg font-bold rounded-xl hover:bg-[#3ba8d4] active:scale-[0.98] transition-all shadow-md shadow-blue-50"
+          disabled={isLoading}
+          className="w-full h-14 bg-[#42BCEB] text-white text-lg font-bold rounded-xl hover:bg-[#3ba8d4] active:scale-[0.98] transition-all shadow-md shadow-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          로그인
+          {isLoading ? "로그인 중..." : "로그인"}
         </button>
 
         <div className="flex justify-center items-center gap-4 text-[13px] text-gray-500 font-medium">

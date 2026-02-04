@@ -68,32 +68,34 @@ export default function SignupPage() {
   };
 
   const handleSignup = async () => {
-    const noErrors = !Object.values(errors).some(e => e !== "");
+  const noErrors = !Object.values(errors).some(e => e !== "");
 
-    if (!noErrors) {
-      alert("입력 정보를 다시 확인해주세요.");
-      return;
-    }
+  if (!noErrors) {
+    alert("입력 정보를 다시 확인해주세요.");
+    return;
+  }
 
-    if (!agreements.terms || !agreements.privacy) {
-      alert("필수 약관에 동의해주세요.");
-      return;
-    }
+  if (!agreements.terms || !agreements.privacy) {
+    alert("필수 약관에 동의해주세요.");
+    return;
+  }
 
-    try {
-      await signup({
-        email: values.email,
-        password: values.password,
-        nickname: values.nickname,
-        gender,
-        ageRange,
-      });
+  try {
+    await signup({
+      email: values.email,
+      password: values.password,
+      nickname: values.nickname,
+      gender,
+      ageRange,
+    });
 
-      console.log("회원가입 요청 전송 완료");
-    } catch (err) {
-      console.error("회원가입 요청 실패", err);
-    }
-  };
+    alert("회원가입이 완료되었습니다! 로그인 해주세요.");
+    navigate("/login");
+  } catch (err) {
+    console.log(err);
+    alert("회원가입에 실패했습니다.");
+  }
+};
 
   return (
     <div className="flex flex-col min-h-screen bg-white px-6 pt-12 pb-8">
