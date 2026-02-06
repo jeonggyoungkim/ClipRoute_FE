@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import VideoCard from './VideoCard';
 import { fetchCourses } from '../api/courses';
@@ -15,6 +16,7 @@ export default function VideoSection({
   shouldFilter,
 }: VideoSectionProps) {
   const observerTarget = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // 필터 모드 여부
   const isFilterMode =
@@ -61,7 +63,10 @@ export default function VideoSection({
   const allCourses =
     data?.pages.flatMap((page) => page.result.courseList) ?? [];
 
- 
+  const handleCourseClick = (courseId: number) => {
+    navigate(`/course/${courseId}`);
+  };
+
   const getSectionTitle = () => {
     if (isFilterMode && destination) {
       return `${destination.regionName} 여행 추천`;
@@ -79,7 +84,6 @@ export default function VideoSection({
     return '현재 가장 인기 있는 대표 지역은 제주, 부산입니다.';
   };
 
-  
   return (
     <div className="mt-12 pt-8 border-t border-gray-100">
       <h2 className="font-bold text-[18px]">{getSectionTitle()}</h2>
@@ -93,7 +97,7 @@ export default function VideoSection({
             <VideoCard
               key={course.courseId}
               course={course}
-              onClick={() => console.log('코스 클릭:', course.courseId)}
+              onClick={() => handleCourseClick(course.courseId)}
             />
           ))
         ) : (
@@ -123,7 +127,7 @@ export default function VideoSection({
           !hasNextPage &&
           allCourses.length > 0 && (
             <p className="text-gray-400 text-[13px]">
-             조건에 맞는 코스가 모두 소진되었습니다.
+              조건에 맞는 코스가 모두 소진되었습니다.
             </p>
           )
         )}
