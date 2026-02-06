@@ -3,16 +3,17 @@ import NavigationBar from '../components/NavigationBar';
 
 interface NavigationLayoutProps {
   children: ReactNode;
-  activeTab?: 'home' | 'course' | 'mypage';  // ← 여기서 받아서
+  activeTab?: 'home' | 'course' | 'mypage';  // 호환성 유지
+  hideNavigation?: boolean;
 }
 
-export default function NavigationLayout({ children, activeTab }: NavigationLayoutProps) {
+export default function NavigationLayout({ children, hideNavigation = false }: NavigationLayoutProps) {
   return (
     <div className="main-layout">
       <main className="content">
         {children}
       </main>
-      <NavigationBar activeTab={activeTab} /> 
+      {!hideNavigation && <NavigationBar />}
     </div>
   );
 }
