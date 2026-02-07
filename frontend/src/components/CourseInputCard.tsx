@@ -44,7 +44,7 @@ export const CourseInputCard = ({ region, dateRange, onLocationClick, onDateClic
         className="flex items-center gap-3 py-4 border-b cursor-pointer"
       >
         <img src={mappinicon} alt="location" className="w-6 h-6" />
-        <span className="text-[#999] text-[14px] text-black ">
+        <span className={`text-sm ${ region ? 'text-gray-900' : 'text-black'}`}>
           {region ? region.regionName : '여행지를 선택해 주세요'}
         </span>
       </div>
@@ -55,7 +55,7 @@ export const CourseInputCard = ({ region, dateRange, onLocationClick, onDateClic
         className="flex items-center gap-3 py-4 cursor-pointer"
       >
         <img src={calendaricon} alt="calendar" className="w-6 h-6" />
-        <span className={`text-[14px] ${dateRange?.startDate ? 'text-gray-900' : 'text-[#999]'}`}>
+        <span className={`text-sm ${dateRange?.startDate ? 'text-gray-900' : 'text-[#999]'}`}>
           {formatDateRange(dateRange)}
         </span>
       </div>
