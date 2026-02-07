@@ -25,7 +25,7 @@ const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/signup", element: <SignupPage /> },
       { path: "/my", element: <MyPage /> },
-      { path: "/course/:videoId", element: <CoursePage /> },
+      { path: "/course/:courseId", element: <CoursePage /> },
       { path: "/loading", element: <LoadingPage /> },
     ],
   },
@@ -36,9 +36,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       {import.meta.env.DEV && (
-  <ReactQueryDevtools initialIsOpen={false} />
-)}
-
+        <ReactQueryDevtools initialIsOpen={false} />
+      )}
     </QueryClientProvider>
   );
 }
