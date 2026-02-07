@@ -17,7 +17,7 @@ const PlaceBottomSheet = ({ places }: any) => {
       <div className="px-5 pb-10 overflow-y-auto h-full scrollbar-hide">
         {days.map((day: any) => (
           <div key={day} className="mb-6">
-            <div className="flex items-center gap-2 mb-2 text-[#42BCEB] font-bold italic">
+            <div className="flex items-center gap-2 mb-2 text-[#42BCEB] font-bold ">
               <span>Day {day}</span>
               <div className="flex-1 h-[1px] bg-gray-100" />
             </div>
