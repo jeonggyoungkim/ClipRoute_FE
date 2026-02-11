@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { HomeIcon } from "../assets/icons/NavBar/HomeIcon";
-import { MycourseIcon } from "../assets/icons/NavBar/MycourseIcon";
-import { MyPageIcon } from "../assets/icons/NavBar/MyPageIcon";
+import { HomeIcon } from "../../assets/icons/NavBar/HomeIcon";
+import { MycourseIcon } from "../../assets/icons/NavBar/MycourseIcon";
+import { MyPageIcon } from "../../assets/icons/NavBar/MyPageIcon";
 
 interface NavItem {
   id: 'home' | 'course' | 'mypage';
@@ -13,7 +13,7 @@ interface NavItem {
 
 const NAV_MENU: NavItem[] = [
   { id: 'home', label: '홈', path: '/', Icon: HomeIcon },
-  { id: 'course', label: '내 코스', path: '/course', Icon: MycourseIcon },
+  { id: 'course', label: '내 코스', path: '/mycourse', Icon: MycourseIcon },
   { id: 'mypage', label: '마이페이지', path: '/my', Icon: MyPageIcon },
 ];
 
