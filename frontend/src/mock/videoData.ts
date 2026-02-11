@@ -1,4 +1,5 @@
-import type { Course, CourseListResult, ApiResponse } from '../types/video';
+import type { Course, CourseListResult,  } from '../types/video';
+import type { ApiResponse } from'../types/common';
 
 export const generateMockCourses = (count: number): Course[] => {
   
