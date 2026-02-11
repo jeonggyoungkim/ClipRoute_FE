@@ -6,7 +6,7 @@ import api from '../api/axios';
 import axios from 'axios';
 
 
-const USE_MOCK_API = true;
+const USE_MOCK_API = false;
 
 interface FetchCoursesParams {
   pageParam: number;
