@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-
-const USE_MOCK = true; // Mock 사용: true, 실제 API: false
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 const api = axios.create({
-  baseURL: USE_MOCK ? '' : 'http://localhost:8080',
-  // baseURL: 'http://15.164.94.220:8080', // 배포 서버
+  baseURL: USE_MOCK ? '' : BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': '69420',
   },
 });
 
