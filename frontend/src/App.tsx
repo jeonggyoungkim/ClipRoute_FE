@@ -4,13 +4,18 @@ import './index.css';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 
+
 import MobileLayout from "./layouts/MobileLayout";
-import LoginPage from "./Pages/LoginPage"; 
-import HomePage from "./Pages/HomePage"; 
+import LoginPage from "./Pages/LoginPage";
+import HomePage from "./Pages/HomePage";
 import SignupPage from "./Pages/SignupPage";
-import CoursePage from "./Pages/CoursePage";
+import CourseDetailPage from "./Pages/CourseDetailPage";
 import LoadingPage from "./Pages/LoadingPage";
 import MyPage from "./Pages/MyPage";
+import ProfilePage from "./Pages/ProfilePage";
+import MyCoursePage from "./Pages/MycoursePage";
+import CourseListPage from "./Pages/CourseListPage";
+
 
 
 const queryClient = new QueryClient();
@@ -25,11 +30,15 @@ const router = createBrowserRouter([
       { path: "/login", element: <LoginPage /> },
       { path: "/signup", element: <SignupPage /> },
       { path: "/my", element: <MyPage /> },
-      { path: "/course/:courseId", element: <CoursePage /> },
+      { path: "/my/profile", element: <ProfilePage /> },
+      { path: "/courses/:courseId", element: <CourseDetailPage /> },
       { path: "/loading", element: <LoadingPage /> },
+      { path: "/mycourse", element: <MyCoursePage /> },
+      { path: "/courses", element: <CourseListPage /> },
     ],
   },
 ]);
+
 
 function App() {
   return (
