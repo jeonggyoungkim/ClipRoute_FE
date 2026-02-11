@@ -45,7 +45,6 @@ const HomePage = () => {
 
   const params = new URLSearchParams();
   params.append("regionId", String(selectedDestination.regionId));
-  params.append("regionName", selectedDestination.regionName);
 
   if (travelDays !== null) {
     params.append("travelDays", String(travelDays));
