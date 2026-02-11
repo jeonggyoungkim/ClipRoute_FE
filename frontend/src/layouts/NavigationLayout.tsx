@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import NavigationBar from '../components/NavigationBar';
+import NavigationBar from '../components/common/NavigationBar';
 
 interface NavigationLayoutProps {
   children: ReactNode;
