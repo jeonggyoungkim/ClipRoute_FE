@@ -41,18 +41,19 @@ const HomePage = () => {
 
 
   const handleGenerateCourse = () => {
-    if (!selectedDestination) {
-      return;
-    }
-    const params = new URLSearchParams({
-      regionId: String(selectedDestination.regionId),  // 선택한 지역의 ID
-      travelDays: String(travelDays || 0),             // 선택한 여행일수 
-    });
+  if (!selectedDestination) return;
 
-    // URL 생성
-    console.log("이동할 경로:", `/courses?${params.toString()}`);
-    navigate(`/courses?${params.toString()}`);
-  };
+  const params = new URLSearchParams();
+  params.append("regionId", String(selectedDestination.regionId));
+  params.append("regionName", selectedDestination.regionName);
+
+  if (travelDays !== null) {
+    params.append("travelDays", String(travelDays));
+  }
+  
+  console.log("이동 경로:", `/courses?${params.toString()}`);
+  navigate(`/courses?${params.toString()}`);
+};
 
   const handleBackToMain = () => {
     setShouldFilter(false);

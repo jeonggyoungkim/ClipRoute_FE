@@ -12,6 +12,7 @@ const CourseListPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+ 
   const regionName = searchParams.get("regionName");
   const startDateStr = searchParams.get("startDate");
   const endDateStr = searchParams.get("endDate");
@@ -20,6 +21,7 @@ const CourseListPage = () => {
 
   const regionId = regionIdParam ? Number(regionIdParam) : null;
   const travelDays = travelDaysParam !== null ? Number(travelDaysParam) : null;
+
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["courseList", regionId, travelDays],
@@ -33,25 +35,36 @@ const CourseListPage = () => {
       }),
   });
 
-  if (isLoading) return <div>로딩중...</div>;
-  if (isError) return <div>에러가 발생했습니다.</div>;
+  if (isLoading) return <div className="p-10 text-center font-medium">로딩 중...</div>;
+  if (isError) return <div className="p-10 text-center text-red-500 font-medium">에러가 발생했습니다.</div>;
 
   const courseList = data?.result?.courseList || [];
 
-  const displayRegionName = regionName || (courseList.length > 0 ? courseList[0].regionName : (regionId ? `${regionId}번 지역` : "전체 지역"));
-  const headerTitle = `${displayRegionName} ${travelDays ? `${travelDays}박 ${travelDays + 1}일` : ""} 여행 코스`;
+ 
+  const getFormattedDateRange = () => {
+    if (travelDays === null) return "날짜 미지정 (전체 일정)";
+    if (travelDays === 0) return "당일치기 여행";
+    
+    
+    if (startDateStr && endDateStr) {
+      const start = formatDate(startDateStr);
+      const end = formatDate(endDateStr).slice(5); 
+      return `${start} - ${end} [${travelDays}박 ${travelDays + 1}일]`;
+    }
+    return `${travelDays}박 ${travelDays + 1}일`;
+  };
 
-  // 날짜 포맷팅
-  const formatDate = (dateStr: string | null) => {
+  
+  const displayRegionName = regionName || (courseList.length > 0 ? courseList[0].regionName : (regionId ? `${regionId}번 지역` : "전체 지역"));
+  const headerDaysText = travelDays === 0 ? "당일치기" : travelDays === null ? "" : `${travelDays}박 ${travelDays + 1}일`;
+  const headerTitle = `${displayRegionName} ${headerDaysText} 여행 코스`.trim();
+
+  
+  function formatDate(dateStr: string | null) {
     if (!dateStr) return "";
     const d = new Date(dateStr);
     return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  };
-
-  const formattedDateRange = startDateStr && endDateStr
-    ? `${formatDate(startDateStr)} - ${formatDate(endDateStr).slice(5)} [${travelDays}박 ${travelDays! + 1}일]`
-    : (travelDays ? `${travelDays}박 ${travelDays + 1}일` : "날짜 미지정");
-
+  }
 
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -72,8 +85,7 @@ const CourseListPage = () => {
         />
 
         <main className="px-5 pt-6 pb-24">
-
-          {/* 입력 정보 카드 (Read Only) */}
+          {/* 입력 정보 카드 (상황별 텍스트 반영) */}
           <div className="border border-[#42BCEB] rounded-2xl py-1 px-[15px] bg-white mb-8">
             <div className="flex items-center gap-3 py-4 border-b border-gray-100">
               <img src={mappinicon} alt="location" className="w-6 h-6" />
@@ -84,7 +96,7 @@ const CourseListPage = () => {
             <div className="flex items-center gap-3 py-4">
               <img src={calendaricon} alt="calendar" className="w-6 h-6" />
               <span className="text-sm text-gray-900 font-medium">
-                {formattedDateRange}ㅁ
+                {getFormattedDateRange()}
               </span>
             </div>
           </div>
