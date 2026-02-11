@@ -36,6 +36,7 @@ export default function VideoSection({
         destination,
         travelDays,
         isFilterMode,
+        isRep : true
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
