@@ -1,8 +1,10 @@
-import type { ApiResponse, CourseListResult } from '../types/video';
+import type { CourseListResult } from '../types/video';
+import type { ApiResponse } from "../types/common";
 import { generateMockCourses, createMockResponse } from '../mock/videoData';
+import { MOCK_COURSE_DETAIL } from '../mock/courseDetail';
+import api from '../api/axios';
+import axios from 'axios';
 
-//true  → 목업 데이터 사용 (현재)
-//false → 실제 API 사용 (나중)
 
 const USE_MOCK_API = true;
 
@@ -11,12 +13,13 @@ interface FetchCoursesParams {
   destination: { regionId: number } | null;
   travelDays: number | null;
   isFilterMode: boolean;
+  isRep: boolean;
 }
-
 
 export const fetchCourses = async (
   params: FetchCoursesParams
 ): Promise<ApiResponse<CourseListResult>> => {
+  params.isRep = true;
   console.log('🚀 [fetchCourses] 호출됨', params);
 
   if (USE_MOCK_API) {
@@ -28,53 +31,29 @@ export const fetchCourses = async (
   return fetchCoursesReal(params);
 };
 
-
+// --- Mock 함수는 그대로 유지 ---
 const fetchCoursesMock = async ({
   pageParam,
   destination,
   travelDays,
   isFilterMode,
 }: FetchCoursesParams): Promise<ApiResponse<CourseListResult>> => {
-  console.log('🧪 [fetchCoursesMock] 시작');
-  console.log('🧪 pageParam:', pageParam);
-  console.log('🧪 destination:', destination);
-  console.log('🧪 travelDays:', travelDays);
-  console.log('🧪 isFilterMode:', isFilterMode);
-
   const pageSize = 10;
   await new Promise(res => setTimeout(res, 300));
 
   let courses = generateMockCourses(50);
-  console.log('🧪 mock 전체 개수:', courses.length);
-
   if (isFilterMode) {
-    if (destination) {
-      courses = courses.filter(c => c.regionId === destination.regionId);
-      console.log('🧪 region 필터 후 개수:', courses.length);
-    }
-    if (travelDays) {
-      courses = courses.filter(c => c.travelDays === travelDays);
-      console.log('🧪 travelDays 필터 후 개수:', courses.length);
-    }
+    if (destination) courses = courses.filter(c => c.regionId === destination.regionId);
+    if (travelDays) courses = courses.filter(c => c.travelDays === travelDays);
   }
 
   const start = pageParam * pageSize;
   const end = start + pageSize;
   const sliced = courses.slice(start, end);
 
-  console.log('🧪 페이지 slice 범위:', start, end);
-  console.log('🧪 현재 페이지 반환 개수:', sliced.length);
-  console.log('🧪 hasNext:', end < courses.length);
 
-  return createMockResponse(
-    sliced,
-    courses.length,
-    pageParam,
-    pageSize,
-    end < courses.length
-  );
+  return createMockResponse(sliced, courses.length, pageParam, pageSize, end < courses.length);
 };
-
 
 const fetchCoursesReal = async ({
   pageParam,
@@ -82,13 +61,11 @@ const fetchCoursesReal = async ({
   travelDays,
   isFilterMode,
 }: FetchCoursesParams): Promise<ApiResponse<CourseListResult>> => {
-  console.log('🌐 [fetchCoursesReal] API 호출 시작');
-
-  const pageSize = 10;
+  console.log('[fetchCoursesReal] API 호출 시작');
 
   const params: Record<string, any> = {
     page: pageParam,
-    pageSize,
+    pageSize: 10,
     sort: 'random',
   };
 
@@ -97,17 +74,47 @@ const fetchCoursesReal = async ({
     if (travelDays) params.travelDays = travelDays;
   }
 
-  const queryString = new URLSearchParams(params).toString();
-  console.log('🌐 요청 쿼리:', queryString);
 
-  const res = await fetch(`/api/v1/courses?${queryString}`);
-  if (!res.ok) {
-    console.error('❌ API 응답 실패', res.status);
+  try {
+    const response = await api.get('/api/v1/courses', { params });
+    console.log('🌐 API 응답 성공', response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ API 응답 실패', error.response?.status || error.message);
     throw new Error('API 요청 실패');
   }
+};
 
-  const json = await res.json();
-  console.log('🌐 API 응답 성공', json);
+// 코스 상세 조회도 수정
+export const fetchCourseDetail = async (courseId: string) => {
+  console.log('🚀 [fetchCourseDetail] 호출됨', courseId);
 
-  return json;
+  if (USE_MOCK_API) {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve(MOCK_COURSE_DETAIL), 500);
+    });
+  }
+
+  console.log('🔵 [fetchCourseDetail] REAL API 모드');
+  try {
+    const response = await api.get(`/api/v1/courses/${courseId}`);
+    return response.data;
+  } catch (error: unknown) {
+
+    if (axios.isAxiosError(error) && error.response) {
+      const status = error.response.status;        // ✅ 상태코드
+      const message =
+        error.response.data?.message ?? '서버 오류'; // ✅ 서버 메시지
+
+      console.error('❌ 상세 조회 실패:', { status, message });
+
+      // 필요하면 커스텀 에러 던지기
+      throw new Error(`Error ${status}: ${message}`);
+    }
+
+    // axios 에러가 아닐 때 (네트워크 끊김, JS 에러 등)
+    console.error('❌ 알 수 없는 에러:', error);
+    throw new Error('Network or unknown error');
+  }
+
 };
