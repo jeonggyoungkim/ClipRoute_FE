@@ -5,7 +5,6 @@ import { MOCK_COURSE_DETAIL } from '../mock/courseDetail';
 import api from '../api/axios';
 import axios from 'axios';
 
-
 const USE_MOCK_API = false;
 
 interface FetchCoursesParams {
@@ -31,7 +30,7 @@ export const fetchCourses = async (
   return fetchCoursesReal(params);
 };
 
-// --- Mock 함수는 그대로 유지 ---
+// --- Mock 함수 ---
 const fetchCoursesMock = async ({
   pageParam,
   destination,
@@ -51,17 +50,17 @@ const fetchCoursesMock = async ({
   const end = start + pageSize;
   const sliced = courses.slice(start, end);
 
-
   return createMockResponse(sliced, courses.length, pageParam, pageSize, end < courses.length);
 };
 
+// --- 실제 API 호출 함수 (에러 응답 상세 확인 버전) ---
 const fetchCoursesReal = async ({
   pageParam,
   destination,
   travelDays,
   isFilterMode,
 }: FetchCoursesParams): Promise<ApiResponse<CourseListResult>> => {
-  console.log('[fetchCoursesReal] API 호출 시작');
+  console.log('🔍 [fetchCoursesReal] API 호출 시작');
 
   const params: Record<string, any> = {
     page: pageParam,
@@ -74,18 +73,39 @@ const fetchCoursesReal = async ({
     if (travelDays) params.travelDays = travelDays;
   }
 
-
   try {
     const response = await api.get('/api/v1/courses', { params });
-    console.log('🌐 API 응답 성공', response.data);
+    console.log('✅ [API 응답 성공]', response.data);
     return response.data;
-  } catch (error: any) {
-    console.error('❌ API 응답 실패', error.response?.status || error.message);
-    throw new Error('API 요청 실패');
+  } catch (error: unknown) {
+    // ✅ axios 에러인지 상세 확인
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        // 1. 서버가 응답을 줬으나 2xx가 아닌 경우 (400, 401, 500 등)
+        const { status, data } = error.response;
+        const serverMessage = data?.message || '상세 메시지 없음';
+        
+        console.error('❌ [백엔드 에러 응답]', {
+          상태코드: status,
+          에러메시지: serverMessage,
+          전체데이터: data
+        });
+        
+        throw new Error(`[Server Error ${status}] ${serverMessage}`);
+      } else if (error.request) {
+        // 2. 요청은 보냈으나 응답이 전혀 없는 경우 (CORS, 서버 꺼짐, ngrok 만료 등)
+        console.error('❌ [응답 없음/CORS 에러]', error.request);
+        throw new Error('서버로부터 응답이 없습니다. CORS 설정이나 ngrok 주소를 확인하세요.');
+      }
+    }
+    
+    // 3. 설정 오류 등 기타 에러
+    console.error('❌ [알 수 없는 에러]', error);
+    throw new Error('네트워크 또는 시스템 오류가 발생했습니다.');
   }
 };
 
-// 코스 상세 조회도 수정
+// --- 코스 상세 조회 ---
 export const fetchCourseDetail = async (courseId: string) => {
   console.log('🚀 [fetchCourseDetail] 호출됨', courseId);
 
@@ -100,21 +120,17 @@ export const fetchCourseDetail = async (courseId: string) => {
     const response = await api.get(`/api/v1/courses/${courseId}`);
     return response.data;
   } catch (error: unknown) {
-
-    if (axios.isAxiosError(error) && error.response) {
-      const status = error.response.status;        // ✅ 상태코드
-      const message =
-        error.response.data?.message ?? '서버 오류'; // ✅ 서버 메시지
-
-      console.error('❌ 상세 조회 실패:', { status, message });
-
-      // 필요하면 커스텀 에러 던지기
-      throw new Error(`Error ${status}: ${message}`);
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        const status = error.response.status;
+        const message = error.response.data?.message ?? '서버 오류';
+        console.error('❌ 상세 조회 실패:', { status, message });
+        throw new Error(`Error ${status}: ${message}`);
+      }
+      console.error('❌ 응답 없음 (네트워크/CORS):', error.request);
+    } else {
+      console.error('❌ 알 수 없는 에러:', error);
     }
-
-    // axios 에러가 아닐 때 (네트워크 끊김, JS 에러 등)
-    console.error('❌ 알 수 없는 에러:', error);
-    throw new Error('Network or unknown error');
+    throw new Error('상세 조회 중 오류 발생');
   }
-
 };
