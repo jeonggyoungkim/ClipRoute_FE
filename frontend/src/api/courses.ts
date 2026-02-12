@@ -5,7 +5,7 @@ import { MOCK_COURSE_DETAIL } from '../mock/courseDetail';
 import api from '../api/axios';
 import axios from 'axios';
 
-const USE_MOCK_API = false;
+const USE_MOCK_API = true;
 
 interface FetchCoursesParams {
   pageParam: number;
