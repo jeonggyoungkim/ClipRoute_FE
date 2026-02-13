@@ -1,20 +1,9 @@
 import CourseCard from "./CourseCard";
 import Checkbox from "../common/Checkbox";
-
-export interface Course {
-    id: number;
-    title: string;
-    startDate: string;
-    endDate: string;
-    locationCount: number;
-    region: string;
-    duration: string;
-    thumbnailUrl: string;
-    status: "current" | "completed";
-}
+import type { CourseItem } from "../../types/mycourse";
 
 interface MyCourseContentProps {
-    groupedCourses: [string, Course[]][];
+    groupedCourses: [string, CourseItem[]][];
     isEmptyCurrentCourses: boolean;
     isEditMode: boolean;
     selectedCourses: number[];
@@ -53,34 +42,33 @@ export default function MyCourseContent({
                             </h2>
                             <div className="space-y-4">
                                 {courses.map(course => {
-                                    const isSelected = selectedCourses.includes(course.id);
+                                    const isSelected = selectedCourses.includes(course.courseId);
                                     return (
                                         <div
-                                            key={course.id}
+                                            key={course.courseId}
                                             className="flex items-center gap-3"
                                         >
                                             {isEditMode && (
                                                 <div className="flex-shrink-0">
                                                     <Checkbox
                                                         checked={isSelected}
-                                                        onChange={() => onSelectCourse(course.id)}
+                                                        onChange={() => onSelectCourse(course.courseId)}
                                                     />
                                                 </div>
                                             )}
-                                            <div 
-                                                className={`flex-1 rounded-2xl transition-all ${
-                                                    isEditMode && isSelected 
-                                                        ? "bg-blue-50 border border-[#42BCEB]" 
-                                                        : "border border-[#E8E8E8]"
-                                                }`}
+                                            <div
+                                                className={`flex-1 rounded-2xl transition-all ${isEditMode && isSelected
+                                                    ? "bg-blue-50 border border-[#42BCEB]"
+                                                    : "border border-[#E8E8E8]"
+                                                    }`}
                                             >
                                                 <CourseCard
                                                     {...course}
                                                     onClick={() => {
                                                         if (isEditMode) {
-                                                            onSelectCourse(course.id);
+                                                            onSelectCourse(course.courseId);
                                                         } else {
-                                                            onNavigateToCourse(course.id);
+                                                            onNavigateToCourse(course.courseId);
                                                         }
                                                     }}
                                                 />

@@ -1,35 +1,31 @@
-interface CourseCardProps {
-  id: number;
-  title: string;
-  startDate: string;
-  endDate: string;
-  locationCount: number;
-  region: string;
-  duration: string;
-  thumbnailUrl: string;
-  status: "current" | "completed";
+import type { CourseItem } from "../../types/mycourse";
+
+interface CourseCardProps extends CourseItem {
   onClick: () => void;
-  isEditMode?: boolean;  // ← 추가
-  isSelected?: boolean;  // ← 추가
+  isEditMode?: boolean;
+  isSelected?: boolean;
 }
 
 export default function CourseCard({
-  title,
+  courseTitle,
   startDate,
   endDate,
-  locationCount,
-  region,
-  duration,
+  placeCount,
+  regionName,
+  travelDays,
   thumbnailUrl,
   onClick,
-  isEditMode = false,  // ← 추가
-  isSelected = false,  // ← 추가
+  isEditMode = false,
+  isSelected = false,
 }: CourseCardProps) {
+  const formatDuration = (days: number) => {
+    return `${days - 1}박 ${days}일`;
+  };
+
   return (
-    <div 
-      className={`bg-white rounded-2xl border p-4 cursor-pointer transition-all ${
-        isSelected ? "border-[#42BCEB] bg-blue-50" : "border-[#E8E8E8]"
-      }`}
+    <div
+      className={`bg-white rounded-2xl border p-4 cursor-pointer transition-all ${isSelected ? "border-[#42BCEB] bg-blue-50" : "border-[#E8E8E8]"
+        }`}
       onClick={onClick}
     >
       {/* 카드 헤더 */}
@@ -53,7 +49,7 @@ export default function CourseCard({
             {thumbnailUrl ? (
               <img
                 src={thumbnailUrl}
-                alt={title}
+                alt={courseTitle}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -67,7 +63,7 @@ export default function CourseCard({
           <div className="flex flex-col justify-between flex-1">
             <div>
               <h3 className="text-m font-bold text-black leading-tight mt-1">
-                {title}
+                {courseTitle}
               </h3>
               <p className="text-sm text-black font-semibold mt-1">
                 {startDate} - {endDate}
@@ -96,13 +92,13 @@ export default function CourseCard({
       {/* 태그 영역 */}
       <div className="flex flex-wrap gap-2">
         <span className="text-[0.75rem] font-semibold text-[#34B1E9] px-2 py-1">
-          장소 개수 : {locationCount}개
+          장소 개수 : {placeCount}개
         </span>
         <span className="text-[0.75rem] font-semibold text-[#34B1E9] px-2 py-1">
-          #{region}
+          #{regionName}
         </span>
         <span className="text-[0.75rem] font-semibold text-[#34B1E9] px-2 py-1">
-          #{duration}
+          #{formatDuration(travelDays)}
         </span>
       </div>
     </div>
