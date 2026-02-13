@@ -5,23 +5,30 @@ import NavigationLayout from "../layouts/NavigationLayout";
 import backicon from "../assets/icons/back-icon.svg";
 import MyCourseTabs from "../components/mycourse/MyCourseTabs";
 import MyCourseFilters from "../components/mycourse/MyCourseFilters";
-import MyCourseContent, { type Course } from "../components/mycourse/MyCourseContent";
+import MyCourseContent from "../components/mycourse/MyCourseContent";
 import { fetchMyCourses } from "../api/myCourse";
+import type { CourseItem } from "../types/mycourse";
+import { useDeleteCourses } from "../hooks/useDeleteCourses";
+import DeleteButton from "../components/common/DeleteButton";
+import DeleteModal from "../components/common/DeleteModal";
 
 type TabType = "current" | "completed";
 
 export default function MyCoursePage() {
   const navigate = useNavigate();
+  const { handleDelete, isDeleting } = useDeleteCourses();
+
   const [activeTab, setActiveTab] = useState<TabType>("current");
   const [sortBy, setSortBy] = useState<"recent" | "progress">("recent");
   const [filterBy, setFilterBy] = useState<"all" | "favorite">("all");
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
 
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState<CourseItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  
+
   useEffect(() => {
     const loadCourses = async () => {
       setIsLoading(true);
@@ -36,16 +43,16 @@ export default function MyCoursePage() {
 
   const filteredCourses = useMemo(() => {
     if (activeTab === "current") {
-      return courses.filter(c => c.status === "current");
+      return courses.filter(c => c.travelStatus === "ONGOING" || c.travelStatus === "BEFORE");
     }
-    return courses.filter(c => c.status === "completed");
+    return courses.filter(c => c.travelStatus === "COMPLETED");
   }, [activeTab, courses]);
 
   const isEmptyCurrentCourses = filteredCourses.length === 0;
 
 
   const groupedCourses = useMemo(() => {
-    const groups: Record<string, Course[]> = {};
+    const groups: Record<string, CourseItem[]> = {};
     filteredCourses.forEach(course => {
       const dateParts = course.startDate.split('.');
       const yearMonth = `${dateParts[0]}.${dateParts[1]}`;
@@ -63,7 +70,17 @@ export default function MyCoursePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  
+  const handleDeleteCourses = async () => {
+    const success = await handleDelete(selectedCourses);
+    if (success) {
+      setCourses(prev => prev.filter(c => !selectedCourses.includes(c.courseId)));
+      setSelectedCourses([]);
+      setIsEditMode(false);
+      setIsModalOpen(false);
+    }
+  };
+
+
   if (isLoading) {
     return (
       <NavigationLayout activeTab="course">
@@ -75,7 +92,7 @@ export default function MyCoursePage() {
   }
 
   return (
-    <NavigationLayout activeTab="course">
+    <NavigationLayout activeTab="course" hideNavigation={isEditMode}>
       <div className="min-h-screen bg-white flex flex-col pb-24 relative">
 
         <Header
@@ -94,12 +111,12 @@ export default function MyCoursePage() {
             </div>
           }
           right={
-            <button 
-            onClick={() => {
-              setIsEditMode(!isEditMode);
-              setSelectedCourses([]);
-            }}
-            className="text-sm font-bold text-black px-2 active:opacity-50">
+            <button
+              onClick={() => {
+                setIsEditMode(!isEditMode);
+                setSelectedCourses([]);
+              }}
+              className="text-sm font-bold text-black px-2 active:opacity-50">
               {isEditMode ? "완료" : "편집"}
             </button>
           }
@@ -117,19 +134,33 @@ export default function MyCoursePage() {
         )}
 
         <MyCourseContent
-  groupedCourses={groupedCourses}
-  isEmptyCurrentCourses={isEmptyCurrentCourses}
-  isEditMode={isEditMode}
-  selectedCourses={selectedCourses}
-  onNavigateToCourse={(courseId) => navigate(`/course/${courseId}`)}
-  onSelectCourse={(courseId) => {
-    setSelectedCourses(prev =>
-      prev.includes(courseId)
-        ? prev.filter(id => id !== courseId)
-        : [...prev, courseId]
-    );
-  }}
-/>
+          groupedCourses={groupedCourses}
+          isEmptyCurrentCourses={isEmptyCurrentCourses}
+          isEditMode={isEditMode}
+          selectedCourses={selectedCourses}
+          onNavigateToCourse={(courseId) => navigate(`/course/${courseId}`)}
+          onSelectCourse={(courseId) => {
+            setSelectedCourses(prev =>
+              prev.includes(courseId)
+                ? prev.filter(id => id !== courseId)
+                : [...prev, courseId]
+            );
+          }}
+        />
+
+        {isEditMode && (
+          <DeleteButton
+            count={selectedCourses.length}
+            onClick={() => setIsModalOpen(true)}
+            isLoading={isDeleting}
+          />
+        )}
+
+        <DeleteModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onConfirm={handleDeleteCourses}
+        />
 
         {!isEmptyCurrentCourses && (
           <button
