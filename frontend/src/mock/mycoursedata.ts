@@ -1,48 +1,60 @@
-import type { Course } from "../components/mycourse/MyCourseContent";
+import type { CourseItem } from "../types/mycourse";
 
-export const MOCK_COURSES: Course[] = [
+export const MOCK_COURSES: CourseItem[] = [
   {
-    id: 1,
-    title: "부산 (1)",
-    startDate: "2026.01.26",
-    endDate: "01.28",
-    locationCount: 4,
-    region: "부산",
-    duration: "2박 3일",
+    courseId: 1,
+    memberCourseId: 1,
+    courseTitle: "부산 여행",
+    regionName: "부산",
+    regionImageUrl: "",
     thumbnailUrl: "https://images.unsplash.com/photo-1634547986064-072d6551069d?q=80&w=200&auto=format&fit=crop",
-    status: "current"
+    startDate: "2026.01.26",
+    endDate: "2026.01.28",
+    travelDays: 3,
+    travelStatus: "ONGOING",
+    placeCount: 4,
+    createdAt: "2026-01-01T00:00:00Z"
   },
   {
-    id: 2,
-    title: "제목",
-    startDate: "2026.12.20",
-    endDate: "12.22",
-    locationCount: 5,
-    region: "지역명",
-    duration: "여행 기간",
+    courseId: 2,
+    memberCourseId: 2,
+    courseTitle: "제목",
+    regionName: "지역명",
+    regionImageUrl: "",
     thumbnailUrl: "",
-    status: "completed"
+    startDate: "2026.1.20",
+    endDate: "2026.1.22",
+    travelDays: 3,
+    travelStatus: "COMPLETED",
+    placeCount: 5,
+    createdAt: "2026-12-01T00:00:00Z"
   },
   {
-    id: 3,
-    title: "제목",
-    startDate: "2026.12.15",
-    endDate: "12.16",
-    locationCount: 3,
-    region: "지역명",
-    duration: "여행 기간",
+    courseId: 3,
+    memberCourseId: 3,
+    courseTitle: "제목",
+    regionName: "지역명",
+    regionImageUrl: "",
     thumbnailUrl: "",
-    status: "completed"
+    startDate: "2026.1.15",
+    endDate: "2026.1.16",
+    travelDays: 2,
+    travelStatus: "COMPLETED",
+    placeCount: 3,
+    createdAt: "2026-12-01T00:00:00Z"
   },
   {
-    id: 4,
-    title: "제목",
-    startDate: "202.12.10",
-    endDate: "12.12",
-    locationCount: 3,
-    region: "지역명",
-    duration: "여행 기간",
+    courseId: 4,
+    memberCourseId: 4,
+    courseTitle: "제목",
+    regionName: "지역명",
+    regionImageUrl: "",
     thumbnailUrl: "",
-    status: "completed"
+    startDate: "2025.12.10",
+    endDate: "2025.12.12",
+    travelDays: 3,
+    travelStatus: "COMPLETED",
+    placeCount: 3,
+    createdAt: "2026-12-01T00:00:00Z"
   }
 ];
