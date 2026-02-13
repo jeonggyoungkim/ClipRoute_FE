@@ -13,6 +13,7 @@ import CourseDetailPage from "./Pages/CourseDetailPage";
 import LoadingPage from "./Pages/LoadingPage";
 import MyPage from "./Pages/MyPage";
 import ProfilePage from "./Pages/ProfilePage";
+import MyCourseDetailPage from './Pages/MyCourseDetailPage';
 import MyCoursePage from "./Pages/MycoursePage";
 import CourseListPage from "./Pages/CourseListPage";
 
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
       { path: "/courses/:courseId", element: <CourseDetailPage /> },
       { path: "/loading", element: <LoadingPage /> },
       { path: "/mycourse", element: <MyCoursePage /> },
+      { path: "/mycourse/:courseId", element: <MyCourseDetailPage /> },
       { path: "/courses", element: <CourseListPage /> },
     ],
   },
