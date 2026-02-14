@@ -32,3 +32,44 @@ export interface DeleteMyCoursesResponse {
     code: string;
     message: string;
 }
+
+// 나의 코스 상세 조회 및 수정 타입 
+
+// 나의 코스 각 장소의 상세 정보
+export interface MyCoursePlace {
+    visitOrder: number;
+    coursePlaceId: number;
+    placeId: number;
+    placeName: string;
+    placeCategory: string;
+    address: string;
+    lat: number;
+    lng: number;
+    timestamp: string | null;
+    deletedAt: string | null;
+}
+
+// 나의 코스 일차별 일정 (여행 일차와 해당 일차에 방문할 장소 목록 그룹화)
+export interface MyCourseItinerary {
+    visitDay: number;
+    places: MyCoursePlace[];
+}
+
+// 특정 코스의 제목, 여행 기간, 상태, 스크랩 여부 등 전체 상세 정보
+export interface MyCourseDetail {
+    courseId: number;
+    videoTitle: string;
+    videoUrl: string;
+    thumbnailUrl: string;
+    channelName: string;
+    regionId: number;
+    regionName: string;
+    isScrapped: boolean;
+    travelStatus: "BEFORE" | "ONGOING" | "COMPLETED";
+    courseTitle: string;
+    startDate: string;
+    endDate: string;
+    itineraries: MyCourseItinerary[];
+}
+
+export type MyCourseDetailResponse = ApiResponse<MyCourseDetail>;
