@@ -37,6 +37,7 @@ export default function MyCourseDetailPage() {
     const navigate = useNavigate();
     const [courseDetail, setCourseDetail] = useState<CourseDetailResult | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isEditMode, setIsEditMode] = useState(false);
 
 
     useEffect(() => {
@@ -98,6 +99,7 @@ export default function MyCourseDetailPage() {
     // 날짜 데이터 API에 없으면 임시 값 사용
     const dateRange = "2026.01.26 - 01.28";
 
+
     return (
         <div className="h-screen flex flex-col bg-white relative overflow-hidden">
             {/* 헤더 */}
@@ -106,7 +108,8 @@ export default function MyCourseDetailPage() {
                 title={(courseDetail as any).courseTitle || courseDetail.videoTitle}
                 date={dateRange}
                 onBack={() => navigate(-1)}
-                onEdit={() => console.log("편집 클릭")}
+                onEdit={() => setIsEditMode(!isEditMode)}
+                isEditMode={isEditMode}
             />
 
 
@@ -118,6 +121,7 @@ export default function MyCourseDetailPage() {
             <PlaceBottomSheet
                 places={sheetPlaces}
                 title={(courseDetail as any).courseTitle || "내 코스 정리"}
+                isEditMode={isEditMode}
             />
         </div>
     );

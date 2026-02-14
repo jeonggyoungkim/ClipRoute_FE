@@ -7,9 +7,10 @@ interface DetailHeaderProps {
     date: string;
     onBack: () => void;
     onEdit: () => void;
+    isEditMode?: boolean;
 }
 
-export default function DetailHeader({ region, title, date, onBack, onEdit }: DetailHeaderProps) {
+export default function DetailHeader({ region, title, date, onBack, onEdit, isEditMode = false }: DetailHeaderProps) {
     return (
         <div className="absolute top-0 left-0 right-0 z-10 px-[16px] pt-[12px]">
             <div className="w-full h-[48px] bg-white rounded-[13px] border border-[#42BCEB] flex items-center px-3 shadow-sm">
@@ -39,9 +40,9 @@ export default function DetailHeader({ region, title, date, onBack, onEdit }: De
                 {/* 편집 버튼 */}
                 <button
                     onClick={onEdit}
-                    className="text-[13px] font-bold text-gray-900 hover:text-gray-600 px-2 whitespace-nowrap"
+                    className={`text-[13px] font-bold px-2 whitespace-nowrap ${isEditMode ? "text-[#42BCEB]" : "text-gray-900 hover:text-gray-600"}`}
                 >
-                    편집
+                    {isEditMode ? "완료" : "편집"}
                 </button>
             </div>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PlaceItem from './PlaceItem';
 
-const PlaceBottomSheet = ({ places = [], title = "영상 속 장소 및 코스 정리" }: any) => {
+const PlaceBottomSheet = ({ places = [], title = "영상 속 장소 및 코스 정리", isEditMode = false }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // 데이터 수신 확인 로그
@@ -52,7 +52,7 @@ const PlaceBottomSheet = ({ places = [], title = "영상 속 장소 및 코스 �
               .map((place: any, index: number) => {
                 // 중복 키 방지를 위해 key 조합 (ID가 없을 때 대비)
                 const uniqueKey = place.id ? `place-${place.id}` : `place-${day}-${index}`;
-                return <PlaceItem key={uniqueKey} place={place} />;
+                return <PlaceItem key={uniqueKey} place={place} isEditMode={isEditMode} />;
               })}
           </div>
         ))}
