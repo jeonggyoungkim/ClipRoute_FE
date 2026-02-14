@@ -3,7 +3,7 @@ import {
   APIProvider,
   Map,
   AdvancedMarker,
-  useMap, 
+  useMap,
 } from '@vis.gl/react-google-maps';
 import MapPin from './map/MapPin';
 import MapLabel from './map/MapLabel';
@@ -28,7 +28,7 @@ const MapInner = ({ places }: { places: Place[] }) => {
       if (map) {
         map.panTo({ lat: place.lat, lng: place.lng });
         // 부드러운 전환을 위해 약간의 시차를 둘 수도 있습니다.
-        map.setZoom(16); 
+        map.setZoom(16);
       }
     },
     [map]
