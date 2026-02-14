@@ -74,27 +74,34 @@ export default function MyCourseDetailPage() {
     }
 
 
-    const mapPlaces = courseDetail.itineraries.flatMap((itinerary) =>
-        itinerary.places.map((place) => ({
-            id: place.placeId,
-            lat: place.lat,
-            lng: place.lng,
-            order: place.visitOrder,
-            name: String(place.placeName),
-        }))
-    );
+    const [places, setPlaces] = useState<any[]>([]);
 
-    // 바텀시트 데이터 변환 
-    const sheetPlaces = courseDetail.itineraries.flatMap((itinerary) =>
-        itinerary.places.map((place) => ({
-            day: itinerary.visitDay,
-            id: place.placeId,
-            order: place.visitOrder,
-            name: String(place.placeName),
-            category: place.placeCategory,
-            address: place.address,
-        }))
-    );
+    useEffect(() => {
+        if (courseDetail) {
+            const newPlaces = courseDetail.itineraries.flatMap((itinerary) =>
+                itinerary.places.map((place) => ({
+                    day: itinerary.visitDay,
+                    id: place.placeId,
+                    order: place.visitOrder,
+                    name: String(place.placeName),
+                    category: place.placeCategory,
+                    address: place.address,
+                    lat: place.lat,
+                    lng: place.lng,
+                }))
+            );
+            setPlaces(newPlaces);
+        }
+    }, [courseDetail]);
+
+    // 지도 표시용 데이터 (state 기반)
+    const mapPlaces = places.map(p => ({
+        id: p.id,
+        lat: p.lat,
+        lng: p.lng,
+        order: p.order,
+        name: p.name,
+    }));
 
     // 날짜 데이터 API에 없으면 임시 값 사용
     const dateRange = "2026.01.26 - 01.28";
@@ -119,9 +126,10 @@ export default function MyCourseDetailPage() {
 
 
             <PlaceBottomSheet
-                places={sheetPlaces}
+                places={places}
                 title={(courseDetail as any).courseTitle || "내 코스 정리"}
                 isEditMode={isEditMode}
+                setPlaces={setPlaces}
             />
         </div>
     );
