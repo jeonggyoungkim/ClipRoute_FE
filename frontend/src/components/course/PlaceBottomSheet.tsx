@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PlaceItem from './PlaceItem';
 
-const PlaceBottomSheet = ({ places = [] }: any) => {
+const PlaceBottomSheet = ({ places = [], title = "영상 속 장소 및 코스 정리" }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // 데이터 수신 확인 로그
@@ -22,21 +22,20 @@ const PlaceBottomSheet = ({ places = [] }: any) => {
   console.log('[PlaceBottomSheet] 렌더링될 Day 목록:', days);
 
   return (
-    <div 
+    <div
       className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-[30px] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] transition-transform duration-500 ease-in-out"
-      style={{ 
-        height: '65vh', 
-        transform: isOpen ? 'translateY(0)' : 'translateY(calc(65vh - 80px))' 
+      style={{
+        height: '65vh',
+        transform: isOpen ? 'translateY(0)' : 'translateY(calc(65vh - 80px))'
       }}
     >
-      {/* 핸들러 영역: 클릭 시 토글 */}
-      <div 
-        className="flex flex-col items-center py-4 cursor-pointer" 
+      <div
+        className="flex flex-col items-center py-4 cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="w-[40px] h-[4px] bg-[#E5E5E5] rounded-full mb-3" />
         <h2 className="text-[18px] font-bold text-[#333] px-5 w-full text-left">
-          영상 속 장소 및 코스 정리 ({places.length}곳)
+          {title}
         </h2>
       </div>
 
@@ -47,7 +46,7 @@ const PlaceBottomSheet = ({ places = [] }: any) => {
               <span>Day {day}</span>
               <div className="flex-1 h-[1px] bg-gray-100" />
             </div>
-            
+
             {places
               .filter((p: any) => p.day === day)
               .map((place: any, index: number) => {
