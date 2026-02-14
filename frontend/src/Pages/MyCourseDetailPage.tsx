@@ -6,6 +6,7 @@ import PlaceBottomSheet from "../components/course/PlaceBottomSheet";
 import { fetchMyCourseDetail, updateMyCourseDetail } from "../api/myCourse";
 import type { MyCourseDetail } from "../types/mycourse";
 import DeleteButton from "../components/common/DeleteButton";
+import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 export default function MyCourseDetailPage() {
     const { courseId } = useParams();
     const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function MyCourseDetailPage() {
 
     const [places, setPlaces] = useState<any[]>([]);
     const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     // 개별 장소 선택/해제 핸들러
     const handleToggleSelect = (placeId: number) => {
@@ -47,14 +49,17 @@ export default function MyCourseDetailPage() {
         });
     };
 
-    // 선택된 장소 삭제 핸들러 (State만 변경)
+    // 삭제 버튼 클릭 -> 모달 오픈
     const handleRemoveSelected = () => {
         if (selectedItems.size === 0) return;
+        setIsDeleteModalOpen(true);
+    };
 
-        if (window.confirm(`${selectedItems.size}개의 장소를 삭제하시겠습니까?`)) {
-            setPlaces(prev => prev.filter(p => !selectedItems.has(p.id)));
-            setSelectedItems(new Set()); // 선택 초기화
-        }
+    // 모달 확인 -> 실제 삭제
+    const handleConfirmDelete = () => {
+        setPlaces(prev => prev.filter(p => !selectedItems.has(p.id)));
+        setSelectedItems(new Set());
+        setIsDeleteModalOpen(false);
     };
 
 
@@ -225,6 +230,7 @@ export default function MyCourseDetailPage() {
                 onDaySelect={handleDaySelect}
             />
 
+
             {/* 삭제 버튼 (편집 모드 + 선택된 항목이 있을 때만 표시) */}
             {isEditMode && selectedItems.size > 0 && (
                 <DeleteButton
@@ -233,6 +239,12 @@ export default function MyCourseDetailPage() {
                 // 위치 등 스타일 조정이 필요하다면 className 추가
                 />
             )}
+
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     );
 }
