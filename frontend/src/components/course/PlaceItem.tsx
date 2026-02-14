@@ -7,9 +7,10 @@ interface PlaceItemProps {
   isEditMode?: boolean;
   isSelected?: boolean;
   onSelect?: () => void;
+  dragHandleProps?: any;
 }
 
-const PlaceItem = ({ place, isEditMode = false, isSelected = false, onSelect = () => { } }: PlaceItemProps) => (
+const PlaceItem = ({ place, isEditMode = false, isSelected = false, onSelect = () => { }, dragHandleProps }: PlaceItemProps) => (
   <div className="flex items-center gap-3 py-4 border-b border-gray-100 last:border-0">
     {/* 편집 모드일 때 체크박스 */}
     {isEditMode && (
@@ -35,7 +36,10 @@ const PlaceItem = ({ place, isEditMode = false, isSelected = false, onSelect = (
     {/* 편집 모드: 핸들바, 일반 모드: 공유 버튼 */}
     <div className="flex gap-3 text-gray-300">
       {isEditMode ? (
-        <div className="cursor-move p-2">
+        <div
+          className="cursor-move p-2"
+          {...dragHandleProps}
+        >
           <img src={dragHandleIcon} alt="drag handle" />
         </div>
       ) : (
