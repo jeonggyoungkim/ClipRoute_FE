@@ -8,9 +8,10 @@ interface DetailHeaderProps {
     onBack: () => void;
     onEdit: () => void;
     isEditMode?: boolean;
+    onTitleClick?: () => void;
 }
 
-export default function DetailHeader({ region, title, date, onBack, onEdit, isEditMode = false }: DetailHeaderProps) {
+export default function DetailHeader({ region, title, date, onBack, onEdit, isEditMode = false, onTitleClick }: DetailHeaderProps) {
     return (
         <div className="absolute top-0 left-0 right-0 z-10 px-[16px] pt-[12px]">
             <div className="w-full h-[48px] bg-white rounded-[13px] border border-[#42BCEB] flex items-center px-3 shadow-sm">
@@ -28,7 +29,11 @@ export default function DetailHeader({ region, title, date, onBack, onEdit, isEd
                 </span>
 
                 {/* 제목 및 날짜 */}
-                <div className="flex-1 truncate flex items-center gap-1 min-w-0">
+                <div
+                    className={`flex-1 truncate flex items-center gap-1 min-w-0 transition-colors ${isEditMode ? "cursor-pointer active:opacity-70" : ""
+                        }`}
+                    onClick={() => isEditMode && onTitleClick?.()}
+                >
                     <span className="text-[15px] font-bold text-gray-900 truncate">
                         {title}
                     </span>

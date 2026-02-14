@@ -7,6 +7,7 @@ import { fetchMyCourseDetail, updateMyCourseDetail } from "../api/myCourse";
 import type { MyCourseDetail } from "../types/mycourse";
 import DeleteButton from "../components/common/DeleteButton";
 import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
+import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
 export default function MyCourseDetailPage() {
     const { courseId } = useParams();
     const navigate = useNavigate();
@@ -19,6 +20,19 @@ export default function MyCourseDetailPage() {
     const [places, setPlaces] = useState<any[]>([]);
     const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isCourseInfoModalOpen, setIsCourseInfoModalOpen] = useState(false);
+
+    // 코스 정보 수정 저장 (제목 변영)
+    const handleCourseInfoSave = (newTitle: string, newDate: string) => {
+        console.log("날짜 변경 요청(미지원):", newDate);
+        if (courseDetail) {
+            setCourseDetail({
+                ...courseDetail,
+                courseTitle: newTitle
+            });
+        }
+        setIsCourseInfoModalOpen(false);
+    };
 
     // 개별 장소 선택/해제 핸들러
     const handleToggleSelect = (placeId: number) => {
@@ -211,6 +225,7 @@ export default function MyCourseDetailPage() {
                 onBack={() => navigate(-1)}
                 onEdit={handleSave}
                 isEditMode={isEditMode}
+                onTitleClick={() => setIsCourseInfoModalOpen(true)}
             />
 
 
@@ -244,6 +259,14 @@ export default function MyCourseDetailPage() {
                 isOpen={isDeleteModalOpen}
                 onClose={() => setIsDeleteModalOpen(false)}
                 onConfirm={handleConfirmDelete}
+            />
+
+            <CourseInfoEditModal
+                isOpen={isCourseInfoModalOpen}
+                initialTitle={courseDetail.courseTitle || courseDetail.videoTitle}
+                initialDate={dateRange}
+                onClose={() => setIsCourseInfoModalOpen(false)}
+                onSave={handleCourseInfoSave}
             />
         </div>
     );
