@@ -1,4 +1,3 @@
-import likeicon from "../../assets/icons/like-icon.svg";
 import shareicon from "../../assets/icons/share-icon.svg";
 
 const PlaceItem = ({ place }: any) => (
@@ -15,10 +14,7 @@ const PlaceItem = ({ place }: any) => (
     </div>
     <div className="flex gap-3 text-gray-300 mt-1">
       <button>
-        <img src={likeicon}/>
-      </button>
-      <button>
-        <img src={shareicon}/>
+        <img src={shareicon} />
       </button>
     </div>
   </div>
