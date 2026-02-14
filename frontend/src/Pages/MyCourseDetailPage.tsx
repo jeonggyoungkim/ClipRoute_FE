@@ -8,6 +8,7 @@ import type { MyCourseDetail } from "../types/mycourse";
 import DeleteButton from "../components/common/DeleteButton";
 import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
+import DateSelectModal from "../components/modals/DateSelectModal";
 export default function MyCourseDetailPage() {
     const { courseId } = useParams();
     const navigate = useNavigate();
@@ -21,10 +22,12 @@ export default function MyCourseDetailPage() {
     const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isCourseInfoModalOpen, setIsCourseInfoModalOpen] = useState(false);
+    const [isDateSelectModalOpen, setIsDateSelectModalOpen] = useState(false);
+    const [courseDateRange, setCourseDateRange] = useState("2026.01.26 - 01.28"); // 초기값
 
     // 코스 정보 수정 저장 (제목 변영)
     const handleCourseInfoSave = (newTitle: string, newDate: string) => {
-        console.log("날짜 변경 요청(미지원):", newDate);
+        // 날짜 변경은 handleDateSelect에서 처리됨. 여기선 제목만.
         if (courseDetail) {
             setCourseDetail({
                 ...courseDetail,
@@ -32,6 +35,29 @@ export default function MyCourseDetailPage() {
             });
         }
         setIsCourseInfoModalOpen(false);
+    };
+
+    // 날짜 선택 완료 핸들러
+    const handleDateSelect = ({ startDate, endDate }: { startDate: Date | null, endDate: Date | null }) => {
+        if (!startDate) return;
+
+        const format = (d: Date) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}.${m}.${day}`;
+        };
+
+        let newRange = format(startDate);
+        if (endDate) {
+            newRange += ` - ${format(endDate).slice(5)}`; // MM.DD 형태로 뒤에 붙임 (디자인에는 2026.01.26 - 01.28)
+            // 아, 디자인을 보면 '2026.01.26 - 01.28' 입니다. 뒤에는 연도 생략.
+            // 하지만 DateSelectModal의 format 로직은 'YYYY.MM.DD - YYYY.MM.DD' 였습니다.
+            // 디자인에 맞추려면 뒤에는 MM.DD만.
+        }
+
+        setCourseDateRange(newRange);
+        // 여기서 API 호출로 날짜를 저장할 수도 있음. (지금은 로컬 상태만 변경)
     };
 
     // 개별 장소 선택/해제 핸들러
@@ -93,6 +119,12 @@ export default function MyCourseDetailPage() {
                 }))
             );
             setPlaces(newPlaces);
+
+            if (courseDetail.startDate && courseDetail.endDate) {
+                const start = courseDetail.startDate.replace(/-/g, '.');
+                const end = courseDetail.endDate.replace(/-/g, '.').slice(5);
+                setCourseDateRange(`${start} - ${end}`);
+            }
         }
     }, [courseDetail]);
 
@@ -211,8 +243,7 @@ export default function MyCourseDetailPage() {
     // 지도 표시용 데이터 (state 기반)
 
 
-    // 날짜 데이터 API에 없으면 임시 값 사용
-    const dateRange = "2026.01.26 - 01.28";
+
 
 
     return (
@@ -221,7 +252,7 @@ export default function MyCourseDetailPage() {
             <DetailHeader
                 region={courseDetail.regionName}
                 title={courseDetail.courseTitle || courseDetail.videoTitle}
-                date={dateRange}
+                date={courseDateRange}
                 onBack={() => navigate(-1)}
                 onEdit={handleSave}
                 isEditMode={isEditMode}
@@ -264,9 +295,16 @@ export default function MyCourseDetailPage() {
             <CourseInfoEditModal
                 isOpen={isCourseInfoModalOpen}
                 initialTitle={courseDetail.courseTitle || courseDetail.videoTitle}
-                initialDate={dateRange}
+                initialDate={courseDateRange}
                 onClose={() => setIsCourseInfoModalOpen(false)}
                 onSave={handleCourseInfoSave}
+                onDateClick={() => setIsDateSelectModalOpen(true)}
+            />
+
+            <DateSelectModal
+                isOpen={isDateSelectModalOpen}
+                onClose={() => setIsDateSelectModalOpen(false)}
+                onConfirm={handleDateSelect}
             />
         </div>
     );
