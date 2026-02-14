@@ -84,13 +84,13 @@ const fetchCoursesReal = async ({
         // 1. 서버가 응답을 줬으나 2xx가 아닌 경우 (400, 401, 500 등)
         const { status, data } = error.response;
         const serverMessage = data?.message || '상세 메시지 없음';
-        
+
         console.error('❌ [백엔드 에러 응답]', {
           상태코드: status,
           에러메시지: serverMessage,
           전체데이터: data
         });
-        
+
         throw new Error(`[Server Error ${status}] ${serverMessage}`);
       } else if (error.request) {
         // 2. 요청은 보냈으나 응답이 전혀 없는 경우 (CORS, 서버 꺼짐, ngrok 만료 등)
@@ -98,14 +98,14 @@ const fetchCoursesReal = async ({
         throw new Error('서버로부터 응답이 없습니다. CORS 설정이나 ngrok 주소를 확인하세요.');
       }
     }
-    
+
     // 3. 설정 오류 등 기타 에러
     console.error('❌ [알 수 없는 에러]', error);
     throw new Error('네트워크 또는 시스템 오류가 발생했습니다.');
   }
 };
 
-// --- 코스 상세 조회 ---
+// --- 코스 상세 조회 (일반용) ---
 export const fetchCourseDetail = async (courseId: string) => {
   console.log('🚀 [fetchCourseDetail] 호출됨', courseId);
 
@@ -134,3 +134,4 @@ export const fetchCourseDetail = async (courseId: string) => {
     throw new Error('상세 조회 중 오류 발생');
   }
 };
+
