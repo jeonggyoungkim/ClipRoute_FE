@@ -2,33 +2,46 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+const IS_PRODUCTION = import.meta.env.PROD;
 
 // 환경 변수 디버깅
 console.log('🔧 [Axios Config]', {
   BASE_URL,
   USE_MOCK,
+  IS_PRODUCTION,
   ENV_MODE: import.meta.env.MODE,
   ENV_DEV: import.meta.env.DEV,
   ENV_PROD: import.meta.env.PROD,
 });
 
 const api = axios.create({
-  baseURL: USE_MOCK ? '' : BASE_URL,
+  // Production: Vercel proxy 사용 (상대 경로)
+  // Development: 직접 백엔드 URL 사용
+  baseURL: USE_MOCK ? '' : (IS_PRODUCTION ? '' : BASE_URL),
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '69420',
   },
 });
 
-// Request Interceptor: 요청 로깅
+// Request Interceptor: 요청 로깅 + 토큰 추가
 api.interceptors.request.use(
   (config) => {
+    // 토큰 가져오기
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+
+    // 토큰이 있으면 Authorization 헤더에 추가
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     console.log('📤 [API Request]', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
       fullURL: `${config.baseURL}${config.url}`,
       params: config.params,
+      hasToken: !!token,
     });
     return config;
   },

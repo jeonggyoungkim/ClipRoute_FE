@@ -7,6 +7,7 @@ import { validateSignin, type LoginInformation } from "../utils/validate";
 import { login } from "../api/auth";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [keepLogin, setKeepLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -31,10 +32,14 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login({
-        email: values.email,
-        password: values.password,
-      });
+      // auth.ts의 login 함수가 토큰 저장까지 처리
+      await login(
+        {
+          email: values.email,
+          password: values.password,
+        },
+        { keepLogin }  // 로그인 상태 유지 옵션 전달
+      );
 
       alert("로그인 성공!");
       navigate("/");
@@ -101,7 +106,19 @@ export default function LoginPage() {
           )}
         </div>
 
-
+        {/* 로그인 상태 유지 */}
+        <div className="flex items-center gap-2 py-2">
+          <input
+            type="checkbox"
+            id="keep"
+            checked={keepLogin}
+            onChange={(e) => setKeepLogin(e.target.checked)}
+            className="w-5 h-5 rounded border-gray-300 text-[#42BCEB] focus:ring-[#42BCEB] cursor-pointer"
+          />
+          <label htmlFor="keep" className="text-sm text-gray-600 font-medium cursor-pointer select-none">
+            로그인 상태 유지
+          </label>
+        </div>
       </div>
 
 
