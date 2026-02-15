@@ -1,91 +1,71 @@
 import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-const IS_PRODUCTION = import.meta.env.PROD;
-
-// 환경 변수 디버깅
-console.log('🔧 [Axios Config]', {
-  BASE_URL,
-  USE_MOCK,
-  IS_PRODUCTION,
-  ENV_MODE: import.meta.env.MODE,
-  ENV_DEV: import.meta.env.DEV,
-  ENV_PROD: import.meta.env.PROD,
-});
 
 const api = axios.create({
-  // Production: Vercel proxy 사용 (상대 경로)
-  // Development: 직접 백엔드 URL 사용
-  baseURL: USE_MOCK ? '' : (IS_PRODUCTION ? '' : BASE_URL),
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     'ngrok-skip-browser-warning': '69420',
   },
 });
 
-// Request Interceptor: 요청 로깅 + 토큰 추가
+// Request Interceptor: 토큰 자동 추가
 api.interceptors.request.use(
   (config) => {
-    // 토큰 가져오기
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    // 인증 불필요 엔드포인트 (로그인, 회원가입)
+    const publicEndpoints = ['/api/auth/login', '/api/auth/signup'];
+    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
 
-    // 토큰이 있으면 Authorization 헤더에 추가
-    if (token) {
+    // 토큰 가져오기 (localStorage 우선, 없으면 sessionStorage)
+    const localToken = localStorage.getItem('accessToken');
+    const sessionToken = sessionStorage.getItem('accessToken');
+    const token = localToken || sessionToken;
+
+    console.log('🔍 [Request Interceptor]', {
+      'URL': config.url,
+      'isPublicEndpoint': isPublicEndpoint,
+      'localStorage 토큰': localToken ? `있음 (${localToken.substring(0, 20)}...)` : 'null',
+      'sessionStorage 토큰': sessionToken ? `있음 (${sessionToken.substring(0, 20)}...)` : 'null',
+      '최종 토큰': token ? `있음 (${token.substring(0, 20)}...)` : 'null',
+      '토큰 추가 여부': !isPublicEndpoint && !!token,
+    });
+
+    // 공개 엔드포인트가 아니고 토큰이 있으면 Authorization 헤더에 추가
+    if (!isPublicEndpoint && token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ Authorization 헤더 추가됨!');
+    } else {
+      console.log('⚠️ Authorization 헤더 추가 안 됨 (공개 엔드포인트 또는 토큰 없음)');
     }
 
-    console.log('📤 [API Request]', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`,
-      params: config.params,
-      hasToken: !!token,
-    });
     return config;
   },
   (error) => {
-    console.error('❌ [Request Error]', error);
     return Promise.reject(error);
   }
 );
 
-// Response Interceptor: 응답 로깅
+// Response Interceptor: 에러 처리
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ [API Response]', {
-      status: response.status,
-      url: response.config.url,
-      data: response.data,
-    });
     return response;
   },
   (error) => {
-    if (error.response) {
-      // 서버가 응답했지만 에러 상태코드
-      console.error('❌ [Response Error]', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        url: error.config?.url,
-        data: error.response.data,
-      });
-    } else if (error.request) {
-      // 요청은 보냈지만 응답 없음
-      console.error('❌ [No Response]', {
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        fullURL: `${error.config?.baseURL}${error.config?.url}`,
-        message: '서버로부터 응답이 없습니다. 가능한 원인: CORS, 서버 다운, 네트워크 문제',
-        errorMessage: error.message,
-      });
-    } else {
-      // 요청 설정 중 에러
-      console.error('❌ [Request Setup Error]', error.message);
+    // 401 에러 처리 (인증 실패)
+    if (error.response?.status === 401) {
+      console.error('❌ 인증 실패: 로그인이 필요합니다.');
+      // 필요시 로그인 페이지로 리다이렉트
+      // window.location.href = '/login';
     }
+
+    // 403 에러 처리 (권한 없음)
+    if (error.response?.status === 403) {
+      console.error('❌ 권한 없음: 접근이 거부되었습니다.');
+    }
+
     return Promise.reject(error);
   }
 );
 
 export default api;
-export { USE_MOCK };
