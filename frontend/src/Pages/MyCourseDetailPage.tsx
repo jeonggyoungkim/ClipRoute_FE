@@ -9,6 +9,7 @@ import DeleteButton from "../components/common/DeleteButton";
 import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
 import DateSelectModal from "../components/modals/DateSelectModal";
+
 export default function MyCourseDetailPage() {
     const { courseId } = useParams();
     const navigate = useNavigate();
@@ -25,8 +26,8 @@ export default function MyCourseDetailPage() {
     const [isDateSelectModalOpen, setIsDateSelectModalOpen] = useState(false);
     const [courseDateRange, setCourseDateRange] = useState("2026.01.26 - 01.28"); // 초기값
 
-    // 코스 정보 수정 저장 (제목 변영)
-    const handleCourseInfoSave = (newTitle: string, newDate: string) => {
+    // 코스 정보 수정 저장 (제목 변경)
+    const handleCourseInfoSave = (newTitle: string, _newDate: string) => {
         // 날짜 변경은 handleDateSelect에서 처리됨. 여기선 제목만.
         if (courseDetail) {
             setCourseDetail({

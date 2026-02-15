@@ -1,23 +1,22 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import usericon from "../assets/icons/user-icon.svg";
 import passwordicon from "../assets/icons/password-icon.svg";
 import useForm from "../hooks/useForm";
 import { validateSignin, type LoginInformation } from "../utils/validate";
-import { login } from "../api/auth"; 
+import { login } from "../api/auth";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [keepLogin, setKeepLogin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const navigate = useNavigate(); 
+
+  const navigate = useNavigate();
 
   const { values, errors, touched, getInputProps } = useForm<LoginInformation>({
-    initialValue: { 
-      email: "", 
-      password: "" 
+    initialValue: {
+      email: "",
+      password: ""
     },
-    validate: validateSignin, 
+    validate: validateSignin,
   });
 
   const handleLogin = async () => {
@@ -30,29 +29,19 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    
+
     try {
-      const response = await login({
+      await login({
         email: values.email,
         password: values.password,
       });
 
-      console.log("로그인 응답:", response.data); // 응답 구조 확인
-      
-      
-      const storage = keepLogin ? localStorage : sessionStorage;
-      
-      // 응답 시 토큰 구조 확인 
-      if (response.data) {
-        storage.setItem("authData", JSON.stringify(response.data));
-      }
-      
       alert("로그인 성공!");
-      navigate("/"); 
-      
+      navigate("/");
+
     } catch (error: any) {
       console.error("로그인 에러:", error);
-      const errorMessage = error.response?.data?.message || "로그인에 실패했습니다.";
+      const errorMessage = error.response?.data?.message || error.message || "로그인에 실패했습니다.";
       alert(errorMessage);
     } finally {
       setIsLoading(false);
@@ -67,7 +56,7 @@ export default function LoginPage() {
         </h1>
       </div>
 
-      
+
       <div className="space-y-4 mb-10">
         {/* 이메일 입력 */}
         <div>
@@ -78,7 +67,7 @@ export default function LoginPage() {
             <input
               type="email"
               placeholder="이메일"
-              {...getInputProps("email")} 
+              {...getInputProps("email")}
               className="w-full h-[55px] pl-[45px] pr-[15px] bg-[#F4F4F4] border-none focus:ring-2 focus:ring-[#42BCEB] outline-none transition-all placeholder:text-[#606060]"
             />
           </div>
@@ -96,7 +85,7 @@ export default function LoginPage() {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="비밀번호"
-              {...getInputProps("password")} 
+              {...getInputProps("password")}
               className="w-full h-[55px] pl-[45px] pr-[45px] bg-[#F4F4F4] border-none focus:ring-2 focus:ring-[#42BCEB] outline-none transition-all placeholder:text-[#606060]"
             />
             <button
@@ -112,19 +101,7 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* 로그인 상태 유지 */}
-        <div className="flex items-center gap-2 py-2">
-          <input
-            type="checkbox"
-            id="keep"
-            checked={keepLogin}
-            onChange={(e) => setKeepLogin(e.target.checked)}
-            className="w-5 h-5 rounded border-gray-300 text-[#42BCEB] focus:ring-[#42BCEB] cursor-pointer"
-          />
-          <label htmlFor="keep" className="text-sm text-gray-600 font-medium cursor-pointer select-none">
-            로그인 상태 유지
-          </label>
-        </div>
+
       </div>
 
 
@@ -138,8 +115,8 @@ export default function LoginPage() {
         </button>
 
         <div className="flex justify-center items-center gap-4 text-[13px] text-gray-500 font-medium">
-          <button 
-            onClick={() => navigate("/signup")} 
+          <button
+            onClick={() => navigate("/signup")}
             className="hover:text-gray-800 transition-colors"
           >
             회원가입
