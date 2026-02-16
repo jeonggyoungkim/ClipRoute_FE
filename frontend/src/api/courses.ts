@@ -1,5 +1,6 @@
 import type { CourseListResult } from '../types/video';
 import type { ApiResponse } from "../types/common";
+import type { ScrapResult } from '../types/course';
 import api from '../api/axios';
 import axios from 'axios';
 
@@ -82,3 +83,9 @@ export const fetchCourseDetail = async (courseId: string) => {
     }
   }
 };
+
+
+export const scrapCourse = async (courseId: number) => {
+  const res = await api.post(`/api/v1/courses/${courseId}/scrap`);
+  return res.data.result as ScrapResult;
+}

@@ -47,3 +47,14 @@ export interface MapPlace {
   lng: number;
   timestamp?: number;
 }
+
+
+export interface ScrapResult {
+  newCourseId: number; // 스크랩 시 생성된 내 코스 ID
+  originalCourseId: number;
+  isScrapped: boolean;
+  travelStatus: "BEFORE" | "AFTER";
+  startDate: string | null;  //여행 시작, 종료 날짜 null 디폴트
+  endtDate: string | null;
+  createdAt: string;
+}
