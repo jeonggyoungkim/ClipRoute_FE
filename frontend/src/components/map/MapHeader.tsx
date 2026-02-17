@@ -3,11 +3,19 @@ import { useNavigate } from "react-router-dom";
 import backIcon from "../../assets/icons/back-icon.svg";
 import saveIcon from "../../assets/icons/save-icon.svg";
 import LoginPopup from "../popups/LoginPopup";
+import { useScrapCourse } from "../../hooks/useScrapCourse";
 
-const MapHeader = () => {
+interface MapHeaderProps {
+  courseId?: number;
+  videoTitle?: string;
+}
+
+const MapHeader = ({ courseId, videoTitle }: MapHeaderProps) => {
   const navigate = useNavigate();
   const [showSaveTooltip, setShowSaveTooltip] = useState(true);
   const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false);
+  const { mutate: scrap, isPending } = useScrapCourse();
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSaveTooltip(false);
@@ -15,10 +23,30 @@ const MapHeader = () => {
     return () => clearTimeout(timer);
   }, []);
 
-
   const handleSaveClick = () => {
-    setShowSaveTooltip(false); // 툴팁이 떠 있다면 닫기
-    setIsLoginPopupOpen(true); // 로그인 팝업 열기
+    setShowSaveTooltip(false);
+
+    // 로그인 확인
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+
+    if (!token) {
+      // 로그인 안 되어 있으면 팝업
+      setIsLoginPopupOpen(true);
+      return;
+    }
+
+    // 로그인 되어 있으면 스크랩
+    if (courseId) {
+      scrap(courseId, {
+        onSuccess: () => {
+          alert('✅ 내 코스에 저장되었어요!');
+          // TODO: UX 개선 필요 
+        },
+        onError: () => {
+          alert('❌ 스크랩에 실패했습니다. 다시 시도해주세요.');
+        }
+      });
+    }
   };
 
   return (
@@ -34,24 +62,22 @@ const MapHeader = () => {
 
           {/* 영상 제목  */}
           <span className="flex-1 text-[15px] font-bold truncate text-[#333] px-2">
-            [영상 제목..] 코스 정리
+            {videoTitle || '[영상 제목..] 코스 정리'}
           </span>
 
           <div className="relative flex items-center">
-            {/* 스크랩  버튼 */}
+            {/* 스크랩 버튼 */}
             <button
               onClick={handleSaveClick}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={isPending}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             >
               <img src={saveIcon} className="w-5 h-5" alt="저장하기" />
             </button>
 
-            {/* 가이드 툴팁 (3초 후 자동 소멸) */}
+            {/* 툴팁 (3초 후 자동 소멸) */}
             {showSaveTooltip && (
               <div className="absolute top-full right-0 mt-3 flex flex-col items-end pointer-events-none animate-bounce-subtle">
-                {/* 말풍선 꼬리 */}
-                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-[#42BCEB] mr-1"></div>
-                {/* 말풍선 본체 */}
                 <div className="bg-[#42BCEB] text-white text-[12px] font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-lg">
                   저장하기
                 </div>
