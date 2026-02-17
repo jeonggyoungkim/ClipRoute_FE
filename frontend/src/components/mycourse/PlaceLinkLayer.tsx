@@ -37,8 +37,14 @@ const PlaceLinkLayer = ({ place, rect, onClose }: PlaceLinkLayerProps) => {
             // 유튜브 검색 결과
             url = `https://m.youtube.com/results?search_query=${query}`;
         } else {
-            // 네이버 지도 검색 결과 (모바일 웹)
-            url = `https://m.map.naver.com/search2/search.naver?query=${query}`;
+            // 네이버 지도
+            if (place.lat && place.lng) {
+                // 좌표가 있는 경우 지도 화면으로 직접 이동
+                url = `https://map.naver.com/v5/?c=${place.lng},${place.lat},15,0,0,0,dh`;
+            } else {
+                // 좌표가 없는 경우 검색 결과 (모바일 웹)
+                url = `https://m.map.naver.com/search2/search.naver?query=${query}`;
+            }
         }
 
         window.open(url, '_blank');

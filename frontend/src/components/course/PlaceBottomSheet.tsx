@@ -10,7 +10,8 @@ const PlaceBottomSheet = ({
   setPlaces,
   selectedItems = new Set(),
   onToggleSelect = () => { },
-  onDaySelect = () => { }
+  onDaySelect = () => { },
+  onShareClick, // 변경: onPlaceClick -> onShareClick
 }: any) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -139,7 +140,13 @@ const PlaceBottomSheet = ({
                     <div className="flex-1 h-[1px] bg-gray-100" />
                   </div>
                 )}
-                <PlaceItem place={place} isEditMode={false} />
+                <PlaceItem
+                  place={place}
+                  isEditMode={false}
+                  onShareClick={(rect: DOMRect) => {
+                    if (onShareClick) onShareClick(place, rect);
+                  }}
+                />
               </div>
             );
           })

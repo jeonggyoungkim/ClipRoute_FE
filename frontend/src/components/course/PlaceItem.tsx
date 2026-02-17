@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import shareicon from "../../assets/icons/share-icon.svg";
 import Checkbox from "../common/Checkbox";
 import dragHandleIcon from "../../assets/icons/Bottom/drag_handle-icon.svg";
@@ -8,11 +9,17 @@ interface PlaceItemProps {
   isChecked?: boolean;
   onToggle?: () => void;
   dragHandleProps?: any;
+  onShareClick?: (rect: DOMRect) => void;
 }
 
-const PlaceItem = ({ place, isEditMode = false, isChecked = false, onToggle = () => { }, dragHandleProps }: PlaceItemProps) => {
+const PlaceItem = ({ place, isEditMode = false, isChecked = false, onToggle = () => { }, dragHandleProps, onShareClick }: PlaceItemProps) => {
+  const itemRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className="flex items-center gap-3 py-4 border-b border-gray-100 last:border-0">
+    <div
+      ref={itemRef}
+      className="flex items-center gap-3 py-4 border-b border-gray-100 last:border-0"
+    >
       {/* 편집 모드일 때 체크박스 */}
       {isEditMode && (
         <div className="mr-1">
@@ -44,7 +51,12 @@ const PlaceItem = ({ place, isEditMode = false, isChecked = false, onToggle = ()
             <img src={dragHandleIcon} alt="drag handle" />
           </div>
         ) : (
-          <button onClick={(e) => { e.stopPropagation(); /* 공유 기능 */ }}>
+          <button onClick={(e) => {
+            e.stopPropagation();
+            if (onShareClick && itemRef.current) {
+              onShareClick(itemRef.current.getBoundingClientRect());
+            }
+          }}>
             <img src={shareicon} alt="share" />
           </button>
         )}

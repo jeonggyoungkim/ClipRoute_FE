@@ -9,6 +9,7 @@ import DeleteButton from "../components/common/DeleteButton";
 import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
 import DateSelectModal from "../components/modals/DateSelectModal";
+import PlaceLinkLayer from "../components/mycourse/PlaceLinkLayer";
 
 export default function MyCourseDetailPage() {
     const { courseId } = useParams();
@@ -25,6 +26,7 @@ export default function MyCourseDetailPage() {
     const [isCourseInfoModalOpen, setIsCourseInfoModalOpen] = useState(false);
     const [isDateSelectModalOpen, setIsDateSelectModalOpen] = useState(false);
     const [courseDateRange, setCourseDateRange] = useState("2026.01.26 - 01.28"); // 초기값
+    const [activePlace, setActivePlace] = useState<{ place: any, rect: DOMRect } | null>(null); // 링크 연결 오버레이 상태
 
     // 코스 정보 수정 저장 (제목 변경)
     const handleCourseInfoSave = (newTitle: string, _newDate: string) => {
@@ -249,6 +251,15 @@ export default function MyCourseDetailPage() {
 
     return (
         <div className="h-screen flex flex-col bg-white relative overflow-hidden">
+            {/* 링크 연결 오버레이 */}
+            {activePlace && (
+                <PlaceLinkLayer
+                    place={activePlace.place}
+                    rect={activePlace.rect}
+                    onClose={() => setActivePlace(null)}
+                />
+            )}
+
             {/* 헤더 */}
             <DetailHeader
                 region={courseDetail.regionName}
@@ -275,6 +286,7 @@ export default function MyCourseDetailPage() {
                 selectedItems={selectedItems}
                 onToggleSelect={handleToggleSelect}
                 onDaySelect={handleDaySelect}
+                onShareClick={(place: any, rect: DOMRect) => setActivePlace({ place, rect })}
             />
 
 
