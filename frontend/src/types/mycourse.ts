@@ -7,10 +7,10 @@ export interface CourseItem {
     regionName: string;
     regionImageUrl: string;
     thumbnailUrl: string;
-    startDate: string;
-    endDate: string;
+    startDate: string | null
+    endDate: string | null;
     travelDays: number;
-    travelStatus: "BEFORE" | "ONGOING" | "COMPLETED";
+    travelStatus: "BEFORE" | "ONGOING" | "COMPLETED" | "AFTER";
     placeCount: number;
     createdAt: string;
 }
@@ -65,7 +65,7 @@ export interface MyCourseDetail {
     regionId: number;
     regionName: string;
     isScrapped: boolean;
-    travelStatus: "BEFORE" | "ONGOING" | "COMPLETED";
+    travelStatus: "BEFORE" | "ONGOING" | "COMPLETED" | "AFTER";
     courseTitle: string;
     startDate: string;
     endDate: string;
