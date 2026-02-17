@@ -84,8 +84,19 @@ export const fetchCourseDetail = async (courseId: string) => {
   }
 };
 
+// 코스 스크랩
+export const scrapCourse = async (courseId: number): Promise<ScrapResult> => {
+  try {
+    const { data } = await api.post(`/api/v1/courses/${courseId}/scrap`);
+    return data.result;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || '스크랩 실패';
+      const status = error.response?.status;
 
-export const scrapCourse = async (courseId: number) => {
-  const res = await api.post(`/api/v1/courses/${courseId}/scrap`);
-  return res.data.result as ScrapResult;
-}
+      if (status === 401) throw new Error('로그인이 필요합니다.');
+      throw new Error(message);
+    }
+    throw error;
+  }
+};
