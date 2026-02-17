@@ -1,5 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/common/Header";
 import NavigationLayout from "../layouts/NavigationLayout";
 import backicon from "../assets/icons/back-icon.svg";
@@ -16,6 +17,7 @@ type TabType = "current" | "completed";
 
 export default function MyCoursePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { handleDelete, isDeleting } = useDeleteCourses();
 
   const [activeTab, setActiveTab] = useState<TabType>("current");
@@ -25,37 +27,77 @@ export default function MyCoursePage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
 
-  const [courses, setCourses] = useState<CourseItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // React Query: 무한 스크롤 적용
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useInfiniteQuery({
+    queryKey: ['myCourses', sortBy], // 정렬 기준이 바뀌면 다시 호출
+    queryFn: ({ pageParam }) => fetchMyCourses(sortBy, pageParam as number | undefined, 5), // 5개씩 가져오기
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage: any) => {
+      // 다음 페이지가 있는지 확인 (백엔드 응답 의존)
+      if (!lastPage?.sliceInfo?.hasNext) {
+        return undefined;
+      }
 
+      // 마지막 코스의 ID 찾기 (커서)
+      const list = lastPage.courseList;
+      if (list && list.length > 0) {
+        const lastItem = list[list.length - 1];
+        // memberCourseId 또는 courseId 사용 (API 명세에 따라 lastMemberCourseId이므로 memberCourseId 사용 추정)
+        const nextCursor = lastItem.memberCourseId;
+        console.log(`👉 [커서 계산] Next Cursor: ${nextCursor}`);
+        return nextCursor;
+      }
 
-  useEffect(() => {
-    const loadCourses = async () => {
-      setIsLoading(true);
-      const data = await fetchMyCourses();
-      setCourses(data);
-      setIsLoading(false);
-    };
+      return undefined;
+    },
+    refetchOnMount: 'always',
+    staleTime: 0,
+  });
 
-    loadCourses();
-  }, []);
+  // 모든 페이지의 데이터를 하나로 합침
+  const courses = useMemo(() => {
+    return data?.pages.flatMap((page: any) => page.courseList || []) || [];
+  }, [data]);
 
 
   const filteredCourses = useMemo(() => {
     if (activeTab === "current") {
-      return courses.filter(c => c.travelStatus === "ONGOING" || c.travelStatus === "BEFORE");
+      // 여행 전 탭: BEFORE, ONGOING
+      return courses.filter(c =>
+        c.travelStatus === "BEFORE" ||
+        c.travelStatus === "ONGOING"
+      );
     }
-    return courses.filter(c => c.travelStatus === "COMPLETED");
+    // 여행 후 탭: AFTER, COMPLETED
+    return courses.filter(c =>
+      c.travelStatus === "AFTER" ||
+      c.travelStatus?.trim() === "AFTER" ||
+      c.travelStatus === "COMPLETED"
+    );
   }, [activeTab, courses]);
 
   const isEmptyCurrentCourses = filteredCourses.length === 0;
 
-
   const groupedCourses = useMemo(() => {
     const groups: Record<string, CourseItem[]> = {};
     filteredCourses.forEach(course => {
-      const dateParts = course.startDate.split('.');
-      const yearMonth = `${dateParts[0]}.${dateParts[1]}`;
+      // startDate가 유효한지 확인하고 안전하게 처리
+      const yearMonth = (course.startDate && course.startDate.includes('.'))
+        ? (() => {
+          try {
+            const dateParts = course.startDate.split('.');
+            return `${dateParts[0]}.${dateParts[1]} `;
+          } catch (e) {
+            return '날짜 오류';
+          }
+        })()
+        : '날짜 미정'; // null이거나 형식이 안 맞으면
 
       if (!groups[yearMonth]) {
         groups[yearMonth] = [];
@@ -63,9 +105,34 @@ export default function MyCoursePage() {
       groups[yearMonth].push(course);
     });
 
-    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+    return Object.entries(groups).sort((a, b) => {
+      if (a[0] === '날짜 미정') return -1; // 날짜 미정은 맨 위로? 혹은 맨 아래로
+      if (b[0] === '날짜 미정') return 1;
+      return b[0].localeCompare(a[0]);
+    });
   }, [filteredCourses]);
 
+  // 무한 스크롤 (IntersectionObserver)
+  const observerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (observerRef.current) {
+      observer.observe(observerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // 맨 위로 이동
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -73,7 +140,8 @@ export default function MyCoursePage() {
   const handleDeleteCourses = async () => {
     const success = await handleDelete(selectedCourses);
     if (success) {
-      setCourses(prev => prev.filter(c => !selectedCourses.includes(c.courseId)));
+      // React Query 캐시 무효화하여 데이터 다시 가져오기
+      queryClient.invalidateQueries({ queryKey: ['myCourses'] });
       setSelectedCourses([]);
       setIsEditMode(false);
       setIsModalOpen(false);
@@ -138,7 +206,7 @@ export default function MyCoursePage() {
           isEmptyCurrentCourses={isEmptyCurrentCourses}
           isEditMode={isEditMode}
           selectedCourses={selectedCourses}
-          onNavigateToCourse={(courseId) => navigate(`/course/${courseId}`)}
+          onNavigateToCourse={(courseId) => navigate(`/mycourse/${courseId}`)}
           onSelectCourse={(courseId) => {
             setSelectedCourses(prev =>
               prev.includes(courseId)
@@ -147,6 +215,12 @@ export default function MyCoursePage() {
             );
           }}
         />
+
+        {/* 무한 스크롤 감지 영역 (로딩 표시) */}
+        <div ref={observerRef} className="h-10 flex justify-center items-center py-4 text-xs text-gray-300">
+          {/* 하단 여백 및 감지용 투명 박스 */}
+          {isFetchingNextPage && <span>로딩 중...</span>}
+        </div>
 
         {isEditMode && (
           <DeleteButton
