@@ -1,5 +1,5 @@
 import api from "./axios";
-import type { FetchMyCoursesResponse, DeleteMyCoursesResponse, MyCourseDetail, MyCourseDetailResponse } from "../types/mycourse";
+import type { FetchMyCoursesResponse, DeleteMyCoursesResponse, MyCourseDetail, MyCourseDetailResponse, FilterOptionResult, FilterOptionResponse } from "../types/mycourse";
 import axios from 'axios';
 
 // --- 나의 코스 목록 조회 (GET) ---
@@ -7,9 +7,11 @@ import axios from 'axios';
 export const fetchMyCourses = async (
   sortBy: "recent" | "progress" = "recent",
   lastMemberCourseId?: number | null,
-  size: number = 5
+  size: number = 5,
+  regionId?: number | null,
+  travelDays?: number | null
 ): Promise<any> => {
-  console.log(`🚀 [fetchMyCourses] API 요청: lastId=${lastMemberCourseId}, size=${size}, sort=${sortBy}`);
+  console.log(`🚀 [fetchMyCourses] API 요청: lastId=${lastMemberCourseId}, size=${size}, sort=${sortBy}, regionId=${regionId}, travelDays=${travelDays}`);
 
   try {
     const sortParam = sortBy === "recent" ? "latest" : sortBy;
@@ -23,6 +25,13 @@ export const fetchMyCourses = async (
     // lastMemberCourseId가 있을 때만 파라미터에 추가 (첫 페이지는 없음)
     if (lastMemberCourseId) {
       params.lastMemberCourseId = lastMemberCourseId;
+    }
+
+    if (regionId) {
+      params.regionId = regionId;
+    }
+    if (travelDays) {
+      params.travelDays = travelDays;
     }
 
     const responseData = await api.get<FetchMyCoursesResponse>('/api/v1/members/me/courses', {
@@ -121,5 +130,24 @@ export const updateMyCourseDetail = async (courseId: string, data: any): Promise
       console.error('❌ 알 수 없는 에러:', error);
       throw new Error('수정 요청 중 오류 발생');
     }
+  }
+};
+
+// --- 나의 코스 필터 옵션 조회 (GET) ---
+// /api/v1/members/me/courses/filters
+export const fetchMyCourseFilterOptions = async (): Promise<FilterOptionResult | null> => {
+  try {
+    const responseData = await api.get<FilterOptionResponse>('/api/v1/members/me/courses/filters');
+    const response = responseData.data;
+
+    console.log('✅ [필터 옵션 조회 성공]', response);
+
+    if (response.isSuccess && response.result) {
+      return response.result;
+    }
+    return null;
+  } catch (error: unknown) {
+    console.error('❌ 필터 옵션 조회 실패:', error);
+    return null;
   }
 };
