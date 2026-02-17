@@ -7,8 +7,8 @@ import backicon from "../assets/icons/back-icon.svg";
 import MyCourseTabs from "../components/mycourse/MyCourseTabs";
 import MyCourseFilters from "../components/mycourse/MyCourseFilters";
 import MyCourseContent from "../components/mycourse/MyCourseContent";
-import { fetchMyCourses } from "../api/myCourse";
-import type { CourseItem } from "../types/mycourse";
+import { fetchMyCourses, fetchMyCourseFilterOptions } from "../api/myCourse";
+import type { CourseItem, FilterOptionResult } from "../types/mycourse";
 import { useDeleteCourses } from "../hooks/useDeleteCourses";
 import DeleteButton from "../components/common/DeleteButton";
 import DeleteModal from "../components/common/DeleteModal";
@@ -21,8 +21,26 @@ export default function MyCoursePage() {
   const { handleDelete, isDeleting } = useDeleteCourses();
 
   const [activeTab, setActiveTab] = useState<TabType>("current");
-  const [sortBy, setSortBy] = useState<"recent" | "progress">("recent");
-  const [filterBy, setFilterBy] = useState<"all" | "favorite">("all");
+  // const [activeTab, setActiveTab] = useState<TabType>("current"); // This is for Travel BEFORE/AFTER tabs, keep it.
+
+  // const [sortBy, setSortBy] = useState<"recent" | "progress">("recent"); // REMOVED
+  // const [filterBy, setFilterBy] = useState<"all" | "favorite">("all"); // REMOVED
+
+  // 새로운 필터 상태
+
+  // 새로운 필터 상태
+  const [filterOptions, setFilterOptions] = useState<FilterOptionResult | null>(null);
+  const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
+  const [selectedTravelDay, setSelectedTravelDay] = useState<number | null>(null);
+
+  // 필터 옵션 가져오기
+  useEffect(() => {
+    const loadOptions = async () => {
+      const options = await fetchMyCourseFilterOptions();
+      setFilterOptions(options);
+    };
+    loadOptions();
+  }, []);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
@@ -35,8 +53,8 @@ export default function MyCoursePage() {
     isFetchingNextPage,
     isLoading
   } = useInfiniteQuery({
-    queryKey: ['myCourses', sortBy], // 정렬 기준이 바뀌면 다시 호출
-    queryFn: ({ pageParam }) => fetchMyCourses(sortBy, pageParam as number | undefined, 5), // 5개씩 가져오기
+    queryKey: ['myCourses', selectedRegionId, selectedTravelDay], // 필터 변경 시 나의 코스 api 재호출
+    queryFn: ({ pageParam }) => fetchMyCourses("recent", pageParam as number | undefined, 5, selectedRegionId, selectedTravelDay), // 5개씩 가져오기
     initialPageParam: undefined,
     getNextPageParam: (lastPage: any) => {
       // 다음 페이지가 있는지 확인 (백엔드 응답 의존)
@@ -193,10 +211,11 @@ export default function MyCoursePage() {
         <MyCourseTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
         <MyCourseFilters
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          filterBy={filterBy}
-          setFilterBy={setFilterBy}
+          filterOptions={filterOptions}
+          selectedRegionId={selectedRegionId}
+          setSelectedRegionId={setSelectedRegionId}
+          selectedTravelDay={selectedTravelDay}
+          setSelectedTravelDay={setSelectedTravelDay}
         />
 
         <MyCourseContent

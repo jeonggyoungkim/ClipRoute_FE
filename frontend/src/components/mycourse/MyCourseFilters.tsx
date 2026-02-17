@@ -2,18 +2,22 @@ import { useState, useRef, useEffect } from "react";
 import chevronDown from "../../assets/icons/chevrondown-icon.svg";
 import chevronUp from "../../assets/icons/chevronup-icon.svg";
 
+import type { FilterOptionResult } from "../../types/mycourse";
+
 interface MyCourseFiltersProps {
-    sortBy: "recent" | "progress";
-    setSortBy: (value: "recent" | "progress") => void;
-    filterBy: "all" | "favorite";
-    setFilterBy: (value: "all" | "favorite") => void;
+    filterOptions: FilterOptionResult | null;
+    selectedRegionId: number | null;
+    setSelectedRegionId: (id: number | null) => void;
+    selectedTravelDay: number | null;
+    setSelectedTravelDay: (day: number | null) => void;
 }
 
 export default function MyCourseFilters({
-    sortBy,
-    setSortBy,
-    filterBy,
-    setFilterBy,
+    filterOptions,
+    selectedRegionId,
+    setSelectedRegionId,
+    selectedTravelDay,
+    setSelectedTravelDay,
 }: MyCourseFiltersProps) {
     const [isRegionOpen, setIsRegionOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
@@ -41,13 +45,16 @@ export default function MyCourseFilters({
         <div className="px-5 py-4 flex justify-end gap-[0.94rem] items-center bg-white">
             {/* 지역 필터 */}
             {/* 지역 필터 (Custom Dropdown) */}
+            {/* 지역 필터 (Custom Dropdown) */}
             <div
                 ref={regionRef}
                 className="relative inline-flex items-center gap-[0.41rem] cursor-pointer"
                 onClick={() => setIsRegionOpen(!isRegionOpen)}
             >
                 <span className="text-[#606060] font-medium text-[0.875rem] leading-[1.5rem]">
-                    {filterBy === 'all' ? '지역' : '즐겨찾기'}
+                    {selectedRegionId
+                        ? filterOptions?.regions.find(r => r.id === selectedRegionId)?.name || '지역'
+                        : '지역'}
                 </span>
                 <img
                     src={isRegionOpen ? chevronUp : chevronDown}
@@ -56,32 +63,40 @@ export default function MyCourseFilters({
                 />
 
                 {isRegionOpen && (
-                    <ul className="absolute top-full right-0 mt-1 flex flex-col items-start gap-[0.9375rem] w-[6.25rem] p-[0.625rem_0.9375rem] bg-white border border-[#D2D2D2] rounded-[0.625rem] shadow-sm z-20">
-                        <li
-                            className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer ${filterBy === 'all' ? 'text-[#606060]' : 'text-black'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setFilterBy('all');
-                                setIsRegionOpen(false);
-                            }}
-                        >
+                    <ul className="absolute top-full right-0 mt-1 flex flex-col items-start gap-[0.9375rem] w-[6.25rem] p-[0.625rem_0.9375rem] bg-white border border-[#D2D2D2] rounded-[0.625rem] shadow-sm z-20 max-h-[200px] overflow-y-auto scrollbar-hide">
+                        {/* 타이틀 (선택 불가) */}
+                        <li className="text-[0.875rem] font-medium leading-[0.875rem] text-[#606060] pointer-events-none">
                             지역
                         </li>
                         <li
-                            className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer ${filterBy === 'favorite' ? 'text-[#606060]' : 'text-black'}`}
+                            className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer ${selectedRegionId === null ? 'text-[#606060]' : 'text-black'}`}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setFilterBy('favorite');
+                                setSelectedRegionId(null);
                                 setIsRegionOpen(false);
                             }}
                         >
-                            즐겨찾기
+                            전체
                         </li>
+                        {filterOptions?.regions.map((region) => (
+                            <li
+                                key={region.id}
+                                className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer ${selectedRegionId === region.id ? 'text-[#606060]' : 'text-black'}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRegionId(region.id);
+                                    setIsRegionOpen(false);
+                                }}
+                            >
+                                {region.name}
+                            </li>
+                        ))}
                     </ul>
                 )}
             </div>
 
             {/* 여행 기간 필터 */}
+            {/* 여행 기간 필터 (Custom Dropdown) */}
             {/* 여행 기간 필터 (Custom Dropdown) */}
             <div
                 ref={sortRef}
@@ -89,7 +104,7 @@ export default function MyCourseFilters({
                 onClick={() => setIsSortOpen(!isSortOpen)}
             >
                 <span className="text-[#606060] font-medium text-[0.875rem] leading-[1.5rem]">
-                    {sortBy === 'recent' ? '여행 기간' : '진행률'}
+                    {selectedTravelDay ? `${selectedTravelDay}일` : '여행 기간'}
                 </span>
                 <img
                     src={isSortOpen ? chevronUp : chevronDown}
@@ -98,27 +113,34 @@ export default function MyCourseFilters({
                 />
 
                 {isSortOpen && (
-                    <ul className="absolute top-full right-0 mt-1 flex flex-col items-start gap-[0.9375rem] w-[6.25rem] p-[0.625rem_0.9375rem] bg-white border border-[#D2D2D2] rounded-[0.625rem] shadow-sm z-20">
-                        <li
-                            className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer whitespace-nowrap ${sortBy === 'recent' ? 'text-[#606060]' : 'text-black'}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSortBy('recent');
-                                setIsSortOpen(false);
-                            }}
-                        >
+                    <ul className="absolute top-full right-0 mt-1 flex flex-col items-start gap-[0.9375rem] w-[6.25rem] p-[0.625rem_0.9375rem] bg-white border border-[#D2D2D2] rounded-[0.625rem] shadow-sm z-20 max-h-[200px] overflow-y-auto scrollbar-hide">
+                        {/* 타이틀 (선택 불가) */}
+                        <li className="text-[0.875rem] font-medium leading-[0.875rem] text-[#606060] pointer-events-none">
                             여행 기간
                         </li>
                         <li
-                            className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer whitespace-nowrap ${sortBy === 'progress' ? 'text-[#606060]' : 'text-black'}`}
+                            className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer whitespace-nowrap ${selectedTravelDay === null ? 'text-[#606060]' : 'text-black'}`}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setSortBy('progress');
+                                setSelectedTravelDay(null);
                                 setIsSortOpen(false);
                             }}
                         >
-                            진행률
+                            전체
                         </li>
+                        {filterOptions?.travelDays.map((days) => (
+                            <li
+                                key={days}
+                                className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer whitespace-nowrap ${selectedTravelDay === days ? 'text-[#606060]' : 'text-black'}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedTravelDay(days);
+                                    setIsSortOpen(false);
+                                }}
+                            >
+                                {days}일
+                            </li>
+                        ))}
                     </ul>
                 )}
             </div>
