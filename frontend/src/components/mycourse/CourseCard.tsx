@@ -62,10 +62,10 @@ export default function CourseCard({
           {/* 정보 */}
           <div className="flex flex-col justify-between flex-1">
             <div>
-              <h3 className="text-m font-bold text-black leading-tight mt-1">
+              <h3 className="text-[1.125rem] font-semibold text-black leading-tight mt-1">
                 {courseTitle}
               </h3>
-              <p className="text-sm text-black font-semibold mt-1">
+              <p className="text-sm text-black font-normal mt-1">
                 {startDate} - {endDate}
               </p>
             </div>
