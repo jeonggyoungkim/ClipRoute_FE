@@ -73,3 +73,15 @@ export interface MyCourseDetail {
 }
 
 export type MyCourseDetailResponse = ApiResponse<MyCourseDetail>;
+
+// 필터 옵션 조회 응답 타입
+export interface FilterOptionResult {
+    regions: {
+        id: number;
+        name: string;
+    }[];
+    travelDays: number[];
+    travelStatuses: string[];
+}
+
+export type FilterOptionResponse = ApiResponse<FilterOptionResult>;
