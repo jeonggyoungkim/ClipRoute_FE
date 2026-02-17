@@ -1,33 +1,56 @@
 import api from "./axios";
-import type { CourseItem, FetchMyCoursesResponse, DeleteMyCoursesResponse, MyCourseDetail, MyCourseDetailResponse } from "../types/mycourse";
+import type { FetchMyCoursesResponse, DeleteMyCoursesResponse, MyCourseDetail, MyCourseDetailResponse } from "../types/mycourse";
 import axios from 'axios';
 
 // --- 나의 코스 목록 조회 (GET) ---
 // /api/v1/members/me/courses
-export const fetchMyCourses = async (): Promise<CourseItem[]> => {
-  console.log('🚀 [fetchMyCourses] 호출됨');
+export const fetchMyCourses = async (
+  sortBy: "recent" | "progress" = "recent",
+  lastMemberCourseId?: number | null,
+  size: number = 5
+): Promise<any> => {
+  console.log(`🚀 [fetchMyCourses] API 요청: lastId=${lastMemberCourseId}, size=${size}, sort=${sortBy}`);
 
   try {
-    const responseData = await api.get<FetchMyCoursesResponse>('/api/v1/members/me/courses');
-    const response = responseData.data;
+    const sortParam = sortBy === "recent" ? "latest" : sortBy;
 
-    console.log('✅ [나의 코스 목록 조회 성공]', response);
+    // 커서 기반 페이지네이션 적용
+    const params: any = {
+      sort: sortParam,
+      pageSize: size
+    };
 
-    if (response.isSuccess && response.result) {
-      return response.result.courseList;
+    // lastMemberCourseId가 있을 때만 파라미터에 추가 (첫 페이지는 없음)
+    if (lastMemberCourseId) {
+      params.lastMemberCourseId = lastMemberCourseId;
     }
 
-    return [];
+    const responseData = await api.get<FetchMyCoursesResponse>('/api/v1/members/me/courses', {
+      params
+    });
+    const response = responseData.data;
+
+    console.log(`✅ [API 응답 전체]`, response);
+
+    if (response.result?.courseList?.length > 0) {
+      console.log(`📌 [첫 번째 코스 ID] ${response.result.courseList[0].courseId} (중복 여부 확인용)`);
+    }
+
+    if (response.isSuccess && response.result) {
+      // 무한 스크롤을 위해 result 전체(sliceInfo 포함) 반환
+      return response.result;
+    }
+
+    throw new Error("데이터 형식이 올바르지 않습니다.");
   } catch (error: unknown) {
     console.error('❌ 나의 코스 목록 조회 실패:', error);
-    return [];
+    throw error;
   }
 };
 
-// --- 나의 코스 삭제 (DELETE) ---
+// --- 나의 코스 삭제 
 // /api/v1/members/me/courses/{courseId} 반복 호출
 export const deleteMyCourses = async (courseIds: number[]): Promise<DeleteMyCoursesResponse> => {
-  console.log('🚀 [deleteMyCourses] 호출됨', courseIds);
 
   try {
     // 현재 코스 1개씩 삭제(백엔드와 상의)
