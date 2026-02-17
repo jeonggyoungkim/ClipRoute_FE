@@ -45,7 +45,7 @@ export interface MyCoursePlace {
     address: string;
     lat: number;
     lng: number;
-    timestamp: string | null;
+    timestamp: number | null;
     deletedAt: string | null;
 }
 
