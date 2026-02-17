@@ -10,6 +10,7 @@ import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
 import DateSelectModal from "../components/modals/DateSelectModal";
 import PlaceLinkLayer from "../components/mycourse/PlaceLinkLayer";
+import AddPlaceButton from "../components/mycourse/AddPlaceButton";
 
 export default function MyCourseDetailPage() {
     const { courseId } = useParams();
@@ -277,6 +278,14 @@ export default function MyCourseDetailPage() {
             </div>
 
 
+
+
+            {/* 장소 추가 버튼 (편집 모드 시 바텀시트 위에 플로팅) */}
+            {isEditMode && (
+                <div className="fixed bottom-6 right-5 z-30">
+                    <AddPlaceButton onClick={() => alert("장소 추가 기능 구현 예정")} />
+                </div>
+            )}
 
             <PlaceBottomSheet
                 places={places}
