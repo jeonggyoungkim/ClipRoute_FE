@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import GoogleMap from '../components/GoolgeMap';
+import GoogleMap from '../components/GoogleMap';
 import MapHeader from '../components/map/MapHeader';
 import PlaceBottomSheet from '../components/course/PlaceBottomSheet';
 import positionicon from "../../src/assets/icons/positon-icon.svg";

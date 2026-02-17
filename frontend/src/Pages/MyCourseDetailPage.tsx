@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import GoogleMap from "../components/GoolgeMap";
+import GoogleMap from "../components/GoogleMap";
 import DetailHeader from "../components/mycourse/DetailHeader";
 import PlaceBottomSheet from "../components/course/PlaceBottomSheet";
 import { fetchMyCourseDetail, updateMyCourseDetail } from "../api/myCourse";
@@ -10,6 +10,7 @@ import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
 import DateSelectModal from "../components/modals/DateSelectModal";
 import PlaceLinkLayer from "../components/mycourse/PlaceLinkLayer";
+import AddPlaceModal from "../components/modals/AddPlaceModal";
 import AddPlaceButton from "../components/mycourse/AddPlaceButton";
 
 export default function MyCourseDetailPage() {
@@ -19,13 +20,12 @@ export default function MyCourseDetailPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
 
-
-
     const [places, setPlaces] = useState<any[]>([]);
     const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isCourseInfoModalOpen, setIsCourseInfoModalOpen] = useState(false);
     const [isDateSelectModalOpen, setIsDateSelectModalOpen] = useState(false);
+    const [isAddPlaceModalOpen, setIsAddPlaceModalOpen] = useState(false); // 장소 추가 모달 상태
     const [courseDateRange, setCourseDateRange] = useState("2026.01.26 - 01.28"); // 초기값
     const [activePlace, setActivePlace] = useState<{ place: any, rect: DOMRect } | null>(null); // 링크 연결 오버레이 상태
 
@@ -41,6 +41,11 @@ export default function MyCourseDetailPage() {
         setIsCourseInfoModalOpen(false);
     };
 
+    // 장소 추가 핸들러
+    const handleAddPlace = () => {
+        setIsAddPlaceModalOpen(true);
+    };
+
     // 날짜 선택 완료 핸들러
     const handleDateSelect = ({ startDate, endDate }: { startDate: Date | null, endDate: Date | null }) => {
         if (!startDate) return;
@@ -54,14 +59,10 @@ export default function MyCourseDetailPage() {
 
         let newRange = format(startDate);
         if (endDate) {
-            newRange += ` - ${format(endDate).slice(5)}`; // MM.DD 형태로 뒤에 붙임 (디자인에는 2026.01.26 - 01.28)
-            // 아, 디자인을 보면 '2026.01.26 - 01.28' 입니다. 뒤에는 연도 생략.
-            // 하지만 DateSelectModal의 format 로직은 'YYYY.MM.DD - YYYY.MM.DD' 였습니다.
-            // 디자인에 맞추려면 뒤에는 MM.DD만.
+            newRange += ` - ${format(endDate).slice(5)}`;
         }
 
         setCourseDateRange(newRange);
-        // 여기서 API 호출로 날짜를 저장할 수도 있음. (지금은 로컬 상태만 변경)
     };
 
     // 개별 장소 선택/해제 핸들러
@@ -146,16 +147,17 @@ export default function MyCourseDetailPage() {
         const loadDetail = async () => {
             try {
                 setIsLoading(true);
-
                 const targetId = courseId || "1";
+                console.log(`[MyCourseDetailPage] 상세 정보 요청: ID=${targetId}`);
 
+                const data = await fetchMyCourseDetail(targetId);
 
-                const response: any = await fetchMyCourseDetail(targetId);
-
-                if (response?.result) {
-                    setCourseDetail(response.result);
+                if (data) {
+                    console.log("[MyCourseDetailPage] 데이터 로드 성공:", data);
+                    setCourseDetail(data);
                 } else {
-                    setCourseDetail(response);
+                    console.error("[MyCourseDetailPage] 데이터 로드 실패 (null 반환)");
+                    // 필요 시 에러 상태 추가
                 }
             } catch (error) {
                 console.error("Failed to fetch course detail:", error);
@@ -170,17 +172,13 @@ export default function MyCourseDetailPage() {
     // 저장 버튼 핸들러
     const handleSave = async () => {
         if (!isEditMode) {
-            // 편집 모드 진입
             setIsEditMode(true);
             return;
         }
 
-        // 편집 완료 (저장)
         try {
             if (!courseDetail || !courseId) return;
 
-
-            // Day별로 그룹화
             const placesByDay: { [key: number]: any[] } = {};
             places.forEach(place => {
                 if (!placesByDay[place.day]) {
@@ -193,12 +191,10 @@ export default function MyCourseDetailPage() {
                 const day = Number(dayStr);
                 const dayPlaces = placesByDay[day];
 
-                // 각 장소 데이터를 items 구조로 변환
                 const items = dayPlaces.map((p, index) => ({
                     visitOrder: index + 1,
                     placeId: p.placeId || p.id,
                     coursePlaceId: p.coursePlaceId
-
                 }));
 
                 return {
@@ -207,7 +203,6 @@ export default function MyCourseDetailPage() {
                 };
             });
 
-
             const payload = {
                 courseTitle: courseDetail.courseTitle,
                 travelStatus: courseDetail.travelStatus,
@@ -215,14 +210,10 @@ export default function MyCourseDetailPage() {
                 itineraries: itineraries
             };
 
-            console.log("💾 저장 Payload:", payload);
-
-            //  API 호출
             const response = await updateMyCourseDetail(courseId, payload);
 
             if (response.isSuccess) {
-                // 성공 시 데이터 갱신 및 모드 종료
-                setCourseDetail(response.result); // 응답으로 온 최신 데이터 반영
+                setCourseDetail(response.result);
                 setIsEditMode(false);
                 alert("코스가 저장되었습니다.");
             }
@@ -233,7 +224,7 @@ export default function MyCourseDetailPage() {
         }
     };
 
-    if (isLoading || !courseDetail) {
+    if (isLoading) {
         return (
             <div className="h-screen flex items-center justify-center bg-white">
                 <p className="text-gray-500">불러오는 중...</p>
@@ -241,14 +232,19 @@ export default function MyCourseDetailPage() {
         );
     }
 
-
-
-
-    // 지도 표시용 데이터 (state 기반)
-
-
-
-
+    if (!courseDetail) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-white gap-4">
+                <p className="text-gray-500">코스 정보를 불러올 수 없습니다.</p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="px-4 py-2 bg-gray-100 rounded-lg text-sm"
+                >
+                    뒤로 가기
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="h-screen flex flex-col bg-white relative overflow-hidden">
@@ -272,18 +268,14 @@ export default function MyCourseDetailPage() {
                 onTitleClick={() => setIsCourseInfoModalOpen(true)}
             />
 
-
             <div className="flex-1 w-full h-full">
                 <GoogleMap places={mapPlaces} />
             </div>
 
-
-
-
             {/* 장소 추가 버튼 (편집 모드 시 바텀시트 위에 플로팅) */}
             {isEditMode && (
                 <div className="fixed bottom-6 right-5 z-30">
-                    <AddPlaceButton onClick={() => alert("장소 추가 기능 구현 예정")} />
+                    <AddPlaceButton onClick={handleAddPlace} />
                 </div>
             )}
 
@@ -298,15 +290,20 @@ export default function MyCourseDetailPage() {
                 onShareClick={(place: any, rect: DOMRect) => setActivePlace({ place, rect })}
             />
 
-
             {/* 삭제 버튼 (편집 모드 + 선택된 항목이 있을 때만 표시) */}
             {isEditMode && selectedItems.size > 0 && (
                 <DeleteButton
                     count={selectedItems.size}
                     onClick={handleRemoveSelected}
-                // 위치 등 스타일 조정이 필요하다면 className 추가
                 />
             )}
+
+            {/* 장소 추가 모달 (전체 화면) */}
+            <AddPlaceModal
+                isOpen={isAddPlaceModalOpen}
+                onClose={() => setIsAddPlaceModalOpen(false)}
+                regionId={courseDetail?.regionId}
+            />
 
             <DeleteConfirmModal
                 isOpen={isDeleteModalOpen}

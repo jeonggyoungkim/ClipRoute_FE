@@ -83,16 +83,14 @@ export default function MyCoursePage() {
     return data?.pages.flatMap((page: any) => page.courseList || []) || [];
   }, [data]);
 
-
   const filteredCourses = useMemo(() => {
+    if (!courses) return [];
     if (activeTab === "current") {
-      // 여행 전 탭: BEFORE, ONGOING
       return courses.filter(c =>
         c.travelStatus === "BEFORE" ||
         c.travelStatus === "ONGOING"
       );
     }
-    // 여행 후 탭: AFTER, COMPLETED
     return courses.filter(c =>
       c.travelStatus === "AFTER" ||
       c.travelStatus?.trim() === "AFTER" ||
@@ -100,35 +98,38 @@ export default function MyCoursePage() {
     );
   }, [activeTab, courses]);
 
-  const isEmptyCurrentCourses = filteredCourses.length === 0;
-
   const groupedCourses = useMemo(() => {
-    const groups: Record<string, CourseItem[]> = {};
-    filteredCourses.forEach(course => {
-      // startDate가 유효한지 확인하고 안전하게 처리
-      const yearMonth = (course.startDate && course.startDate.includes('.'))
-        ? (() => {
-          try {
-            const dateParts = course.startDate.split('.');
-            return `${dateParts[0]}.${dateParts[1]} `;
-          } catch (e) {
-            return '날짜 오류';
+    try {
+      const groups: Record<string, CourseItem[]> = {};
+
+      filteredCourses.forEach(course => {
+        let yearMonth = '날짜 미정';
+
+        if (course.startDate && course.startDate.includes('.')) {
+          const parts = course.startDate.split('.');
+          if (parts.length >= 2) {
+            yearMonth = `${parts[0]}.${parts[1]}`;
           }
-        })()
-        : '날짜 미정'; // null이거나 형식이 안 맞으면
+        }
 
-      if (!groups[yearMonth]) {
-        groups[yearMonth] = [];
-      }
-      groups[yearMonth].push(course);
-    });
+        if (!groups[yearMonth]) {
+          groups[yearMonth] = [];
+        }
+        groups[yearMonth].push(course);
+      });
 
-    return Object.entries(groups).sort((a, b) => {
-      if (a[0] === '날짜 미정') return -1; // 날짜 미정은 맨 위로? 혹은 맨 아래로
-      if (b[0] === '날짜 미정') return 1;
-      return b[0].localeCompare(a[0]);
-    });
+      return Object.entries(groups).sort((a, b) => {
+        if (a[0] === '날짜 미정') return 1; // 날짜 미정은 맨 아래로
+        if (b[0] === '날짜 미정') return -1;
+        return b[0].localeCompare(a[0]); // 최신 날짜 순
+      });
+    } catch (e) {
+      console.error("코스 그룹화 중 에러 발생:", e);
+      return [];
+    }
   }, [filteredCourses]);
+
+  const isEmptyCurrentCourses = filteredCourses.length === 0;
 
   // 무한 스크롤 (IntersectionObserver)
   const observerRef = useRef<HTMLDivElement>(null);
@@ -166,12 +167,26 @@ export default function MyCoursePage() {
     }
   };
 
+  // ... (observer logic) ...
 
   if (isLoading) {
     return (
       <NavigationLayout activeTab="course">
         <div className="min-h-screen flex items-center justify-center">
           <p className="text-gray-500">코스 불러오는 중...</p>
+        </div>
+      </NavigationLayout>
+    );
+  }
+
+  // 에러 발생 시 처리 (추가)
+  // const { isError } = useInfiniteQuery(...) 에서 isError를 가져와야 함.
+  // 여기서는 간단히 data가 없고 로딩도 아닐 때 처리
+  if (!data && !isLoading) {
+    return (
+      <NavigationLayout activeTab="course">
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-gray-500">데이터를 불러올 수 없습니다.</p>
         </div>
       </NavigationLayout>
     );

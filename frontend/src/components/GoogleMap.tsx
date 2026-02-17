@@ -7,18 +7,25 @@ import {
 } from '@vis.gl/react-google-maps';
 import MapPin from './map/MapPin';
 import MapLabel from './map/MapLabel';
+import PlaceBadge from './map/PlaceBadge';
 
 interface Place {
   id: number;
   lat: number;
   lng: number;
-  order: number;
+  order?: number;
   name: string;
+  category?: string;
   [key: string]: any;
 }
 
+interface GoogleMapProps {
+  places: Place[];
+  mode?: 'view' | 'add'; // view: 일반 핀, add: 검색 결과 뱃지
+}
+
 // 1. 실제 지도를 렌더링하고 조작하는 내부 컴포넌트
-const MapInner = ({ places }: { places: Place[] }) => {
+const MapInner = ({ places, mode = 'view' }: GoogleMapProps) => {
   const map = useMap(); // APIProvider 내부이므로 인스턴스를 가져올 수 있음
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -27,7 +34,6 @@ const MapInner = ({ places }: { places: Place[] }) => {
       setSelectedId(place.id);
       if (map) {
         map.panTo({ lat: place.lat, lng: place.lng });
-        // 부드러운 전환을 위해 약간의 시차를 둘 수도 있습니다.
         map.setZoom(16);
       }
     },
@@ -50,10 +56,14 @@ const MapInner = ({ places }: { places: Place[] }) => {
           onClick={() => handleMarkerClick(place)}
           zIndex={selectedId === place.id ? 10 : 1}
         >
-          <div className="relative flex flex-col items-center">
-            {selectedId === place.id && <MapLabel name={place.name} />}
-            <MapPin order={place.order} />
-          </div>
+          {mode === 'add' ? (
+            <PlaceBadge name={place.name} category={place.category || '기타'} />
+          ) : (
+            <div className="relative flex flex-col items-center">
+              {selectedId === place.id && <MapLabel name={place.name} />}
+              <MapPin order={place.order || 0} />
+            </div>
+          )}
         </AdvancedMarker>
       ))}
     </Map>
@@ -61,11 +71,11 @@ const MapInner = ({ places }: { places: Place[] }) => {
 };
 
 // 2. 최상위 GoogleMap 컴포넌트 (Provider 역할)
-const GoogleMap = ({ places }: { places: Place[] }) => {
+const GoogleMap = ({ places, mode = 'view' }: GoogleMapProps) => {
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
       <div className="w-full h-full min-h-[500px]">
-        <MapInner places={places} />
+        <MapInner places={places} mode={mode} />
       </div>
     </APIProvider>
   );
