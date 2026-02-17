@@ -192,14 +192,12 @@ export default function MyCoursePage() {
 
         <MyCourseTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {!isEmptyCurrentCourses && (
-          <MyCourseFilters
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            filterBy={filterBy}
-            setFilterBy={setFilterBy}
-          />
-        )}
+        <MyCourseFilters
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          filterBy={filterBy}
+          setFilterBy={setFilterBy}
+        />
 
         <MyCourseContent
           groupedCourses={groupedCourses}
