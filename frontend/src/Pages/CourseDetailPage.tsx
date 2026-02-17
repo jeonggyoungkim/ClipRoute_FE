@@ -82,7 +82,7 @@ const CourseDetailPage = () => {
     );
   }
 
-  
+
   const places: MapPlace[] = data.result.itineraries.flatMap((itinerary: Itinerary) =>
     itinerary.places.map((place: Place) => ({
       id: place.coursePlaceId,
@@ -100,7 +100,9 @@ const CourseDetailPage = () => {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       <GoogleMap places={places} />
-      <MapHeader />
+      <MapHeader
+        courseId={data.result.courseId}
+        videoTitle={data.result.videoTitle} />
       <PlaceBottomSheet places={places} />
       <button className="absolute bottom-[100px] right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
         <img src={positionicon} alt="current position" />
