@@ -289,7 +289,7 @@ export default function MyCourseDetailPage() {
 
             <PlaceBottomSheet
                 places={places}
-                title={courseDetail.courseTitle || "내 코스 정리"}
+                title="나의 코스 정리"
                 isEditMode={isEditMode}
                 setPlaces={setPlaces}
                 selectedItems={selectedItems}

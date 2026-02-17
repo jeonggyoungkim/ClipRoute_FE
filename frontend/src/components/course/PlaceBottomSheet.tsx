@@ -11,11 +11,9 @@ const PlaceBottomSheet = ({
   selectedItems = new Set(),
   onToggleSelect = () => { },
   onDaySelect = () => { },
-  onShareClick, // 변경: onPlaceClick -> onShareClick
+  onShareClick,
 }: any) => {
   const [isOpen, setIsOpen] = useState(false);
-
-
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || !setPlaces) return;
@@ -73,60 +71,62 @@ const PlaceBottomSheet = ({
 
       <div className="px-5 pb-20 overflow-y-auto h-[calc(65vh-80px)] scrollbar-hide">
         {isEditMode ? (
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="course-places">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef}>
-                  {places.map((place: any, index: number) => {
-                    const isFirstOfDay = index === 0 || places[index - 1].day !== place.day;
-                    const draggableId = place.id ? `place-${place.id}` : `place-idx-${index}`;
+          <div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="course-places">
+                {(provided) => (
+                  <div {...provided.droppableProps} ref={provided.innerRef}>
+                    {places.map((place: any, index: number) => {
+                      const isFirstOfDay = index === 0 || places[index - 1].day !== place.day;
+                      const draggableId = place.id ? `place-${place.id}` : `place-idx-${index}`;
 
-                    // 현재 Day의 모든 장소가 선택되었는지 확인
-                    const isDayAllSelected = places
-                      .filter((p: any) => p.day === place.day)
-                      .every((p: any) => selectedItems.has(p.id));
+                      // 현재 Day의 모든 장소가 선택되었는지 확인
+                      const isDayAllSelected = places
+                        .filter((p: any) => p.day === place.day)
+                        .every((p: any) => selectedItems.has(p.id));
 
-                    return (
-                      <div key={draggableId}>
-                        {isFirstOfDay && (
-                          <div className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
-                            {isEditMode && (
-                              <div className="mr-2">
-                                <Checkbox
-                                  checked={isDayAllSelected}
-                                  onChange={() => onDaySelect(place.day, !isDayAllSelected)}
+                      return (
+                        <div key={draggableId}>
+                          {isFirstOfDay && (
+                            <div className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
+                              {isEditMode && (
+                                <div className="mr-2">
+                                  <Checkbox
+                                    checked={isDayAllSelected}
+                                    onChange={() => onDaySelect(place.day, !isDayAllSelected)}
+                                  />
+                                </div>
+                              )}
+                              <span>Day {place.day}</span>
+                              <div className="flex-1 h-[1px] bg-gray-100" />
+                            </div>
+                          )}
+                          <Draggable draggableId={draggableId} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="bg-white"
+                              >
+                                <PlaceItem
+                                  place={place}
+                                  isEditMode={isEditMode}
+                                  dragHandleProps={provided.dragHandleProps}
+                                  isChecked={selectedItems.has(place.id)}
+                                  onToggle={() => onToggleSelect(place.id)}
                                 />
                               </div>
                             )}
-                            <span>Day {place.day}</span>
-                            <div className="flex-1 h-[1px] bg-gray-100" />
-                          </div>
-                        )}
-                        <Draggable draggableId={draggableId} index={index}>
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className="bg-white"
-                            >
-                              <PlaceItem
-                                place={place}
-                                isEditMode={isEditMode}
-                                dragHandleProps={provided.dragHandleProps}
-                                isChecked={selectedItems.has(place.id)}
-                                onToggle={() => onToggleSelect(place.id)}
-                              />
-                            </div>
-                          )}
-                        </Draggable>
-                      </div>
-                    );
-                  })}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+                          </Draggable>
+                        </div>
+                      );
+                    })}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </div>
         ) : (
           places.map((place: any, index: number) => {
             const isFirstOfDay = index === 0 || places[index - 1].day !== place.day;
