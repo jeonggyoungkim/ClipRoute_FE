@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import PlaceItem from './PlaceItem';
 import Checkbox from '../common/Checkbox';
@@ -53,10 +53,10 @@ const PlaceBottomSheet = ({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-20 bg-white rounded-t-[30px] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] transition-transform duration-500 ease-in-out"
+      className="fixed left-0 right-0 z-20 bg-white rounded-t-[30px] shadow-[0_-8px_20px_rgba(0,0,0,0.1)] transition-all duration-500 ease-in-out"
       style={{
         height: '65vh',
-        transform: isOpen ? 'translateY(0)' : 'translateY(calc(65vh - 80px))'
+        bottom: isOpen ? '0' : 'calc(80px - 65vh)'
       }}
     >
       <div
@@ -86,7 +86,7 @@ const PlaceBottomSheet = ({
                         .every((p: any) => selectedItems.has(p.id));
 
                       return (
-                        <div key={draggableId}>
+                        <Fragment key={draggableId}>
                           {isFirstOfDay && (
                             <div className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
                               {isEditMode && (
@@ -101,7 +101,7 @@ const PlaceBottomSheet = ({
                               <div className="flex-1 h-[1px] bg-gray-100" />
                             </div>
                           )}
-                          <Draggable draggableId={draggableId} index={index}>
+                          <Draggable key={draggableId} draggableId={draggableId} index={index}>
                             {(provided) => (
                               <div
                                 ref={provided.innerRef}
@@ -118,7 +118,7 @@ const PlaceBottomSheet = ({
                               </div>
                             )}
                           </Draggable>
-                        </div>
+                        </Fragment>
                       );
                     })}
                     {provided.placeholder}
