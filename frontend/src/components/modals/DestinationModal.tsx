@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchRegions } from '../../api/regions'; 
+import { fetchRegions } from '../../api/regions';
 import type { Region } from '../../types/region';
 import Header from '../common/Header';
 import closeIcon from '../../assets/icons/close-icon.svg';
@@ -24,6 +24,12 @@ const DestinationModal = ({ isOpen, onClose, onSelect }: DestinationModalProps) 
 
   const regions = data?.result.regions || [];
 
+
+  regions.forEach(r => {
+    if (!r.imageUrl) console.warn(`[Region ${r.regionId}] Image URL is missing!`);
+    else console.log(`[Region ${r.regionId}] Image URL:`, r.imageUrl);
+  });
+
   const handleSelectRegion = (region: Region) => {
     onSelect(region);
     onClose();
@@ -33,28 +39,28 @@ const DestinationModal = ({ isOpen, onClose, onSelect }: DestinationModalProps) 
     <div className="fixed inset-0 z-50 bg-white flex flex-col animate-modal-up">
       <div className="w-full h-full max-w-md mx-auto flex flex-col">
         <Header
-  center={
-    <h2 className="text-[1.125rem] font-bold">
-      여행지 선택
-    </h2>
-  }
-  right={
-    <button 
-      onClick={onClose}
-      className="p-2 rounded-full hover:bg-gray-100"
-      aria-label="닫기"
-    >
-      <img 
-        src={closeIcon} 
-        className="w-[1.5rem] h-[1.5rem]" 
-        alt="" 
-      />
-    </button>
-  }
-/>
-        
+          center={
+            <h2 className="text-[1.125rem] font-bold">
+              여행지 선택
+            </h2>
+          }
+          right={
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-gray-100"
+              aria-label="닫기"
+            >
+              <img
+                src={closeIcon}
+                className="w-[1.5rem] h-[1.5rem]"
+                alt=""
+              />
+            </button>
+          }
+        />
 
-        
+
+
         <div className="px-6 pt-4 pb-10 flex-1 overflow-y-auto">
           <div className="grid grid-cols-3 gap-y-10 gap-x-2">
             {regions.map((region) => (
@@ -69,11 +75,12 @@ const DestinationModal = ({ isOpen, onClose, onSelect }: DestinationModalProps) 
                     alt={region.regionName}
                     className="w-full h-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/80?text=No+Image";
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "https://placehold.co/80?text=No+Image";
                     }}
                   />
                 </div>
-                <span className="text-sm font-bold text-black">
+                <span className="text-sm font-semibold text-black">
                   {region.regionName}
                 </span>
               </button>
