@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import GoogleMap from '../components/GoogleMap';
 import MapHeader from '../components/map/MapHeader';
 import PlaceBottomSheet from '../components/course/PlaceBottomSheet';
+import PlaceLinkLayer from '../components/mycourse/PlaceLinkLayer';
 import positionicon from "../../src/assets/icons/positon-icon.svg";
 import { fetchCourseDetail } from '../api/courses';
 
@@ -59,6 +61,7 @@ interface MapPlace {
 
 const CourseDetailPage = () => {
   const { courseId } = useParams<{ courseId: string }>();
+  const [activePlace, setActivePlace] = useState<{ place: any, rect: DOMRect } | null>(null);
 
   const { data, isLoading, isError } = useQuery<CourseDetailResponse>({
     queryKey: ['course', courseId],
@@ -99,11 +102,21 @@ const CourseDetailPage = () => {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
+      {activePlace && (
+        <PlaceLinkLayer
+          place={activePlace.place}
+          rect={activePlace.rect}
+          onClose={() => setActivePlace(null)}
+        />
+      )}
       <GoogleMap places={places} />
       <MapHeader
         courseId={data.result.courseId}
         videoTitle={data.result.videoTitle} />
-      <PlaceBottomSheet places={places} />
+      <PlaceBottomSheet
+        places={places}
+        onShareClick={(place: any, rect: DOMRect) => setActivePlace({ place, rect })}
+      />
       <button className="absolute bottom-[100px] right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
         <img src={positionicon} alt="current position" />
       </button>
