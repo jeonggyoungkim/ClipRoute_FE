@@ -1,5 +1,5 @@
 import api from "./axios";
-import type { FetchMyCoursesResponse, DeleteMyCoursesResponse, MyCourseDetail, MyCourseDetailResponse, FilterOptionResult, FilterOptionResponse } from "../types/mycourse";
+import type { FetchMyCoursesResponse, DeleteMyCoursesResponse, MyCourseDetail, MyCourseDetailResponse, FilterOptionResult, FilterOptionResponse, UpdateMyCourseDetailRequest } from "../types/mycourse";
 import axios from 'axios';
 
 // --- 나의 코스 목록 조회 (GET) ---
@@ -105,13 +105,13 @@ export const fetchMyCourseDetail = async (courseId: string): Promise<MyCourseDet
     } else {
       console.error('❌ 알 수 없는 에러:', error);
     }
-    return null;
+    throw error;
   }
 };
 
 // --- 나의 코스 수정/저장 (PATCH) ---
 // /api/v1/members/me/courses/{courseId}
-export const updateMyCourseDetail = async (courseId: string, data: any): Promise<MyCourseDetailResponse> => {
+export const updateMyCourseDetail = async (courseId: string, data: UpdateMyCourseDetailRequest): Promise<MyCourseDetailResponse> => {
   console.log('🚀 [updateMyCourseDetail] 호출됨', { courseId, data });
 
   try {
@@ -134,7 +134,6 @@ export const updateMyCourseDetail = async (courseId: string, data: any): Promise
 };
 
 // --- 나의 코스 필터 옵션 조회 (GET) ---
-// /api/v1/members/me/courses/filters
 export const fetchMyCourseFilterOptions = async (): Promise<FilterOptionResult | null> => {
   try {
     const responseData = await api.get<FilterOptionResponse>('/api/v1/members/me/courses/filters');
