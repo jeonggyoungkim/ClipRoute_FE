@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import './index.css';
@@ -16,6 +17,7 @@ import ProfilePage from "./Pages/ProfilePage";
 import MyCourseDetailPage from './Pages/MyCourseDetailPage';
 import MyCoursePage from "./Pages/MycoursePage";
 import CourseListPage from "./Pages/CourseListPage";
+import SplashScreen from "./Pages/SplashScreen";
 
 
 
@@ -43,9 +45,20 @@ const router = createBrowserRouter([
 
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  // 스플래시 종료 핸들러
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      {showSplash ? (
+        <SplashScreen onFinish={handleSplashFinish} />
+      ) : (
+        <RouterProvider router={router} />
+      )}
       {/* {import.meta.env.DEV && (
         <ReactQueryDevtools initialIsOpen={false} />
       )} */}
