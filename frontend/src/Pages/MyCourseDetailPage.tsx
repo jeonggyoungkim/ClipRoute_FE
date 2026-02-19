@@ -250,16 +250,13 @@ export default function MyCourseDetailPage() {
             for (let day = 1; day <= finalTotalDays; day++) {
                 const dayPlaces = placesByDay[day] || [];
 
-                const items = dayPlaces.map((p, index) => {
-                    // 순서 명시 (1부터 시작)
-                    const visitOrder = index + 1;
-
-                    // 기존 장소: coursePlaceId만 전송
+                const items = dayPlaces.map((p) => {
+                    // 기존 장소: coursePlaceId만 전송 (배열 순서가 방문 순서)
                     if (p.coursePlaceId) {
-                        return { coursePlaceId: p.coursePlaceId, visitOrder };
+                        return { coursePlaceId: p.coursePlaceId };
                     }
                     // 신규 장소: placeId만 전송
-                    return { placeId: p.placeId, visitOrder };
+                    return { placeId: p.placeId };
                 });
 
                 itineraries.push({

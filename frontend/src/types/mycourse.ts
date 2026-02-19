@@ -78,7 +78,7 @@ export type MyCourseDetailResponse = ApiResponse<MyCourseDetail>;
 export interface UpdateMyCourseItem {
     coursePlaceId?: number; // 기존 장소일 경우 필수 (placeId는 생략 가능하거나 무시됨)
     placeId?: number;       // 새로 추가된 장소일 경우 필수 (coursePlaceId 없음)
-    visitOrder?: number;    // 명시적 순서 부여
+    // visitOrder?: number;    // 서버에서 배열 순서로 자동 매핑하므로 제거
 }
 
 export interface UpdateMyCourseItinerary {
