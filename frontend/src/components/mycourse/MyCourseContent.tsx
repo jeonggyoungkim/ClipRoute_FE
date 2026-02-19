@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import CourseCard from "./CourseCard";
 import Checkbox from "../common/Checkbox";
 import type { CourseItem } from "../../types/mycourse";
@@ -19,6 +20,8 @@ export default function MyCourseContent({
     onNavigateToCourse,
     onSelectCourse,
 }: MyCourseContentProps) {
+    const navigate = useNavigate();
+
     return (
         <main className="flex-1 px-5">
             {isEmptyCurrentCourses ? (
@@ -29,7 +32,10 @@ export default function MyCourseContent({
                     <p className="text-black text-sm font-semi-bold mb-8 leading-relaxed">
                         영상 코스를 둘러보고 여행을 계획해 보세요
                     </p>
-                    <button className="bg-[#42BCEB] text-white px-10 py-3 rounded-xl font-bold shadow-m shadow-blue-100 active:scale-95 transition-transform">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="bg-[#42BCEB] text-white px-10 py-3 rounded-xl font-bold shadow-m shadow-blue-100 active:scale-95 transition-transform"
+                    >
                         코스 둘러보기
                     </button>
                 </div>
