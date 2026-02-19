@@ -14,13 +14,21 @@ export default function CourseCard({
   regionName,
   travelDays,
   thumbnailUrl,
+  yt_video_id,
   onClick,
   isEditMode = false,
   isSelected = false,
 }: CourseCardProps) {
   const formatDuration = (days: number) => {
-    return `${days - 1}박 ${days}일`;
+    return days === 1 ? "당일치기" : `${Math.max(0, days - 1)}박 ${days}일`;
   };
+
+  // 썸네일 URL 결정 규칙:
+  // 1. yt_video_id가 있으면 S3 URL 생성
+  // 2. 없으면 기존 thumbnailUrl 사용
+  const displayThumbnailUrl = yt_video_id
+    ? `https://cliproute-images.s3.ap-northeast-2.amazonaws.com/images/courses/${yt_video_id}.jpg`
+    : thumbnailUrl;
 
   return (
     <div
@@ -46,9 +54,9 @@ export default function CourseCard({
         <div className="flex gap-3 flex-1">
           {/* 썸네일 */}
           <div className="w-[56px] h-[56px] rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
-            {thumbnailUrl ? (
+            {displayThumbnailUrl ? (
               <img
-                src={thumbnailUrl}
+                src={displayThumbnailUrl}
                 alt={courseTitle}
                 className="w-full h-full object-cover"
               />
