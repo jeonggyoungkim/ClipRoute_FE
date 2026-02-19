@@ -4,7 +4,7 @@ import GoogleMap from "../components/GoogleMap";
 import DetailHeader from "../components/mycourse/DetailHeader";
 import PlaceBottomSheet from "../components/course/PlaceBottomSheet";
 import { fetchMyCourseDetail, updateMyCourseDetail } from "../api/myCourse";
-import type { MyCourseDetail } from "../types/mycourse";
+import type { MyCourseDetail, UpdateMyCourseDetailRequest } from "../types/mycourse";
 import DeleteButton from "../components/common/DeleteButton";
 import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import CourseInfoEditModal from "../components/modals/CourseInfoEditModal";
@@ -19,6 +19,7 @@ export default function MyCourseDetailPage() {
     const [courseDetail, setCourseDetail] = useState<MyCourseDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const [places, setPlaces] = useState<any[]>([]);
     const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
@@ -26,8 +27,21 @@ export default function MyCourseDetailPage() {
     const [isCourseInfoModalOpen, setIsCourseInfoModalOpen] = useState(false);
     const [isDateSelectModalOpen, setIsDateSelectModalOpen] = useState(false);
     const [isAddPlaceModalOpen, setIsAddPlaceModalOpen] = useState(false); // 장소 추가 모달 상태
-    const [courseDateRange, setCourseDateRange] = useState("2026.01.26 - 01.28"); // 초기값
+    // 날짜 포맷팅 헬퍼
+    const getFormattedDateRange = () => {
+        if (!courseDetail?.startDate) return "";
+        try {
+            const start = courseDetail.startDate.replace(/-/g, '.');
+            const end = courseDetail.endDate?.replace(/-/g, '.').slice(5) || "";
+            return end ? `${start} - ${end}` : start;
+        } catch (e) {
+            return courseDetail.startDate;
+        }
+    };
+
     const [activePlace, setActivePlace] = useState<{ place: any, rect: DOMRect } | null>(null); // 링크 연결 오버레이 상태
+
+    const courseDateRange = getFormattedDateRange();
 
     // 코스 정보 수정 저장 (제목 변경)
     const handleCourseInfoSave = (newTitle: string, _newDate: string) => {
@@ -50,19 +64,21 @@ export default function MyCourseDetailPage() {
     const handleDateSelect = ({ startDate, endDate }: { startDate: Date | null, endDate: Date | null }) => {
         if (!startDate) return;
 
-        const format = (d: Date) => {
+        const formatForApi = (d: Date) => {
             const y = d.getFullYear();
             const m = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
-            return `${y}.${m}.${day}`;
+            return `${y}-${m}-${day}`;
         };
 
-        let newRange = format(startDate);
-        if (endDate) {
-            newRange += ` - ${format(endDate).slice(5)}`;
+        // API 전송용 날짜 업데이트 (courseDetail 상태도 업데이트 -> 화면 자동 갱신)
+        if (courseDetail) {
+            setCourseDetail((prev) => prev ? ({
+                ...prev,
+                startDate: formatForApi(startDate),
+                endDate: endDate ? formatForApi(endDate) : formatForApi(startDate)
+            }) : null);
         }
-
-        setCourseDateRange(newRange);
     };
 
     // 개별 장소 선택/해제 핸들러
@@ -111,25 +127,26 @@ export default function MyCourseDetailPage() {
     useEffect(() => {
         if (courseDetail) {
             const newPlaces = courseDetail.itineraries.flatMap((itinerary) =>
-                itinerary.places.map((place) => ({
-                    day: itinerary.visitDay,
-                    id: place.placeId, // placeId 사용
-                    coursePlaceId: place.coursePlaceId,
-                    order: place.visitOrder,
-                    name: String(place.placeName),
-                    category: place.placeCategory,
-                    address: place.address,
-                    lat: place.lat,
-                    lng: place.lng,
-                }))
-            );
+                itinerary.places
+                    .filter(place => !place.deletedAt) // 삭제된 장소 제외
+                    .map((place) => ({
+                        day: itinerary.visitDay,
+                        id: place.coursePlaceId,
+                        placeId: place.placeId,
+                        coursePlaceId: place.coursePlaceId,
+                        order: place.visitOrder,
+                        name: String(place.placeName),
+                        category: place.placeCategory,
+                        address: place.address,
+                        lat: place.lat,
+                        lng: place.lng,
+                    }))
+            ).sort((a, b) => {
+                if (a.day !== b.day) return a.day - b.day;
+                return (a.order || 0) - (b.order || 0);
+            });
             setPlaces(newPlaces);
-
-            if (courseDetail.startDate && courseDetail.endDate) {
-                const start = courseDetail.startDate.replace(/-/g, '.');
-                const end = courseDetail.endDate.replace(/-/g, '.').slice(5);
-                setCourseDateRange(`${start} - ${end}`);
-            }
+            // 날짜 업데이트 이펙트 제거 (getFormattedDateRange로 대체)
         }
     }, [courseDetail]);
 
@@ -147,10 +164,15 @@ export default function MyCourseDetailPage() {
         const loadDetail = async () => {
             try {
                 setIsLoading(true);
-                const targetId = courseId || "1";
-                console.log(`[MyCourseDetailPage] 상세 정보 요청: ID=${targetId}`);
+                setError(null);
+                if (!courseId) {
+                    setIsLoading(false);
+                    return;
+                }
 
-                const data = await fetchMyCourseDetail(targetId);
+                console.log(`[MyCourseDetailPage] 상세 정보 요청: ID=${courseId}`);
+
+                const data = await fetchMyCourseDetail(courseId);
 
                 if (data) {
                     console.log("[MyCourseDetailPage] 데이터 로드 성공:", data);
@@ -161,6 +183,19 @@ export default function MyCourseDetailPage() {
                 }
             } catch (error) {
                 console.error("Failed to fetch course detail:", error);
+
+                const err = error as any;
+                let msg = "코스 정보를 불러올 수 없습니다.";
+                if (err?.response?.data) {
+                    // 서버에서 보내준 에러 메시지 전체를 확인
+                    console.log("❌ Server Error Response:", err.response.data);
+                    msg = typeof err.response.data === 'string'
+                        ? err.response.data
+                        : (err.response.data.message || JSON.stringify(err.response.data));
+                } else if (error instanceof Error) {
+                    msg = error.message;
+                }
+                setError(`[${err?.response?.status || 'Unknown'}] ${msg}`);
             } finally {
                 setIsLoading(false);
             }
@@ -191,24 +226,40 @@ export default function MyCourseDetailPage() {
                 const day = Number(dayStr);
                 const dayPlaces = placesByDay[day];
 
-                const items = dayPlaces.map((p, index) => ({
-                    visitOrder: index + 1,
-                    placeId: p.placeId || p.id,
-                    coursePlaceId: p.coursePlaceId
-                }));
+                const items = dayPlaces.map((p, index) => {
+                    // 순서 명시 (1부터 시작)
+                    const visitOrder = index + 1;
+
+                    // 기존 장소: coursePlaceId만 전송
+                    if (p.coursePlaceId) {
+                        return { coursePlaceId: p.coursePlaceId, visitOrder };
+                    }
+                    // 신규 장소: placeId만 전송
+                    return { placeId: p.placeId, visitOrder };
+                });
 
                 return {
                     visitDay: day,
-                    places: items
+                    items: items
                 };
             });
 
-            const payload = {
+            // 날짜 형식 보장 (YYYY-MM-DD or null)
+            const ensureDateFormat = (dateStr: string | null | undefined) => {
+                if (!dateStr) return null;
+                if (dateStr.includes('T')) return dateStr.split('T')[0];
+                return dateStr;
+            };
+
+            const payload: UpdateMyCourseDetailRequest = {
                 courseTitle: courseDetail.courseTitle,
                 travelStatus: courseDetail.travelStatus,
-                regionId: courseDetail.regionId,
+                startDate: ensureDateFormat(courseDetail.startDate),
+                endDate: ensureDateFormat(courseDetail.endDate),
                 itineraries: itineraries
             };
+
+            console.log("🚀 [handleSave] Payload:", JSON.stringify(payload, null, 2));
 
             const response = await updateMyCourseDetail(courseId, payload);
 
@@ -224,10 +275,49 @@ export default function MyCourseDetailPage() {
         }
     };
 
+    // 장소 선택 핸들러 (AddPlaceModal에서 호출)
+    const handlePlaceSelect = (place: any) => {
+        // 마지막 날짜에 추가 (기본값)
+        const lastDay = places.length > 0 ? Math.max(...places.map(p => p.day)) : 1;
+        const dayPlaces = places.filter(p => p.day === lastDay);
+        const maxOrder = dayPlaces.reduce((max, p) => Math.max(max, p.order || 0), 0);
+
+        const newPlace = {
+            day: lastDay,
+            placeId: place.placeId,
+            coursePlaceId: undefined, // 신규 장소임 (저장 시 placeId만 전송)
+            order: maxOrder + 1,
+            name: place.placeName,
+            category: place.category,
+            address: place.address,
+            lat: place.lat,
+            lng: place.lng,
+            id: undefined // coursePlaceId가 없으므로 undef
+        };
+
+        setPlaces(prev => [...prev, newPlace]);
+        setIsAddPlaceModalOpen(false);
+    };
+
     if (isLoading) {
         return (
             <div className="h-screen flex items-center justify-center bg-white">
                 <p className="text-gray-500">불러오는 중...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="h-screen flex flex-col items-center justify-center bg-white gap-4">
+                <p className="text-red-500 font-bold">오류가 발생했습니다</p>
+                <p className="text-gray-500 text-center px-4">{error}</p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="px-4 py-2 bg-gray-100 rounded-lg text-sm"
+                >
+                    뒤로 가기
+                </button>
             </div>
         );
     }
@@ -302,7 +392,9 @@ export default function MyCourseDetailPage() {
             <AddPlaceModal
                 isOpen={isAddPlaceModalOpen}
                 onClose={() => setIsAddPlaceModalOpen(false)}
+                onPlaceSelect={handlePlaceSelect}
                 regionId={courseDetail?.regionId}
+                regionName={courseDetail?.regionName}
             />
 
             <DeleteConfirmModal
