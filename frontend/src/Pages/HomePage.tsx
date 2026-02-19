@@ -41,18 +41,31 @@ const HomePage = () => {
 
 
   const handleGenerateCourse = () => {
-  if (!selectedDestination) return;
+    if (!selectedDestination) return;
 
-  const params = new URLSearchParams();
-  params.append("regionId", String(selectedDestination.regionId));
+    const params = new URLSearchParams();
+    params.append("regionId", String(selectedDestination.regionId));
 
-  if (travelDays !== null) {
-    params.append("travelDays", String(travelDays));
-  }
-  
-  console.log("이동 경로:", `/courses?${params.toString()}`);
-  navigate(`/courses?${params.toString()}`);
-};
+    if (travelDays !== null) {
+      params.append("travelDays", String(travelDays));
+    }
+
+    if (selectedDateRange?.startDate && selectedDateRange?.endDate) {
+      // 날짜 포맷 (YYYY-MM-DD)
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      params.append("startDate", formatDate(selectedDateRange.startDate));
+      params.append("endDate", formatDate(selectedDateRange.endDate));
+    }
+
+    console.log("이동 경로:", `/courses?${params.toString()}`);
+    navigate(`/courses?${params.toString()}`);
+  };
 
   const handleBackToMain = () => {
     setShouldFilter(false);
