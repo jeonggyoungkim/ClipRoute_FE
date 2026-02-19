@@ -18,36 +18,54 @@ const PlaceBottomSheet = ({
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || !setPlaces) return;
 
-    const sourceIndex = result.source.index;
-    const destinationIndex = result.destination.index;
+    const sourceDay = Number(result.source.droppableId);
+    const destDay = Number(result.destination.droppableId);
 
-    if (sourceIndex === destinationIndex) return;
+    // 같은 자리에 둠
+    if (sourceDay === destDay && result.source.index === result.destination.index) return;
 
-    const newPlaces: any[] = Array.from(places);
-    const [moved] = newPlaces.splice(sourceIndex, 1);
-    newPlaces.splice(destinationIndex, 0, moved);
+    const newPlaces = [...places];
 
-    let newDay = moved.day;
-    if (destinationIndex === 0) {
-      if (newPlaces.length > 1) {
-        newDay = newPlaces[1].day;
-      }
+    // 1. 같은 Day 내 이동
+    if (sourceDay === destDay) {
+      const dayPlaces = newPlaces.filter(p => p.day === sourceDay)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const [moved] = dayPlaces.splice(result.source.index, 1);
+      dayPlaces.splice(result.destination.index, 0, moved);
+
+      // 순서 재할당
+      dayPlaces.forEach((p, idx) => { p.order = idx + 1; });
+
+      // 원본 배열 업데이트: 해당 Day만 교체하고 나머지는 유지
+      const otherPlaces = newPlaces.filter(p => p.day !== sourceDay);
+      // 병합 시 순서가 섞이지 않도록 주의 (날짜별 정렬이 필요할 수 있음)
+      const updatedPlaces = [...otherPlaces, ...dayPlaces].sort((a, b) => a.day - b.day || (a.order || 0) - (b.order || 0));
+      setPlaces(updatedPlaces);
+
     } else {
-      newDay = newPlaces[destinationIndex - 1].day;
+      // 2. 다른 Day로 이동
+      const sourcePlaces = newPlaces.filter(p => p.day === sourceDay)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      const destPlaces = newPlaces.filter(p => p.day === destDay)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const [moved] = sourcePlaces.splice(result.source.index, 1);
+
+      // 이동한 아이템 정보 업데이트
+      moved.day = destDay;
+
+      destPlaces.splice(result.destination.index, 0, moved);
+
+      // 순서 재할당
+      sourcePlaces.forEach((p, idx) => { p.order = idx + 1; });
+      destPlaces.forEach((p, idx) => { p.order = idx + 1; });
+
+      // 전체 병합
+      const otherPlaces = newPlaces.filter(p => p.day !== sourceDay && p.day !== destDay);
+      const updatedPlaces = [...otherPlaces, ...sourcePlaces, ...destPlaces].sort((a, b) => a.day - b.day || (a.order || 0) - (b.order || 0));
+      setPlaces(updatedPlaces);
     }
-    moved.day = newDay;
-
-    const dayCounters: { [key: number]: number } = {};
-    const reorderedPlaces = newPlaces.map((place: any) => {
-      const currentCount = dayCounters[place.day] || 0;
-      dayCounters[place.day] = currentCount + 1;
-      return {
-        ...place,
-        order: dayCounters[place.day]
-      };
-    });
-
-    setPlaces(reorderedPlaces);
   };
 
 
@@ -71,85 +89,128 @@ const PlaceBottomSheet = ({
 
       <div className="px-5 pb-20 overflow-y-auto h-[calc(65vh-80px)] scrollbar-hide">
         {isEditMode ? (
-          <div>
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="course-places">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    {places.map((place: any, index: number) => {
-                      const isFirstOfDay = index === 0 || places[index - 1].day !== place.day;
-                      const draggableId = place.id ? `place-${place.id}` : `place-idx-${index}`;
+          <DragDropContext onDragEnd={handleDragEnd}>
+            {(() => {
+              const maxDay = places.length > 0 ? Math.max(...places.map((p: any) => p.day)) : 1;
+              const renderElements = [];
 
-                      // 현재 Day의 모든 장소가 선택되었는지 확인
-                      const isDayAllSelected = places
-                        .filter((p: any) => p.day === place.day)
-                        .every((p: any) => selectedItems.has(p.id));
+              for (let day = 1; day <= maxDay; day++) {
+                const dayPlaces = places
+                  .filter((p: any) => p.day === day)
+                  .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
-                      return (
-                        <Fragment key={draggableId}>
-                          {isFirstOfDay && (
-                            <div className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
-                              {isEditMode && (
-                                <div className="mr-2">
-                                  <Checkbox
-                                    checked={isDayAllSelected}
-                                    onChange={() => onDaySelect(place.day, !isDayAllSelected)}
-                                  />
-                                </div>
-                              )}
-                              <span>Day {place.day}</span>
-                              <div className="flex-1 h-[1px] bg-gray-100" />
+                const isDayAllSelected = dayPlaces.length > 0 && dayPlaces.every((p: any) => selectedItems.has(p.id));
+
+                renderElements.push(
+                  <div key={`day-section-${day}`} className="mb-2">
+                    {/* Day Header */}
+                    <div className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
+                      {isEditMode && dayPlaces.length > 0 && (
+                        <div className="mr-2">
+                          <Checkbox
+                            checked={isDayAllSelected}
+                            onChange={() => onDaySelect(day, !isDayAllSelected)}
+                          />
+                        </div>
+                      )}
+                      <span>Day {day}</span>
+                      <div className="flex-1 h-[1px] bg-black" />
+                    </div>
+
+                    {/* Droppable Area for this Day */}
+                    <Droppable droppableId={String(day)}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`min-h-[50px] rounded-lg transition-colors ${snapshot.isDraggingOver ? "bg-blue-50" : ""
+                            }`}
+                        >
+                          {dayPlaces.length > 0 ? (
+                            dayPlaces.map((place: any, index: number) => {
+                              const draggableId = place.id ? `place-${place.id}` : `place-idx-${day}-${index}`;
+                              return (
+                                <Draggable
+                                  key={draggableId}
+                                  draggableId={draggableId}
+                                  index={index}
+                                >
+                                  {(dragProvided) => (
+                                    <div
+                                      ref={dragProvided.innerRef}
+                                      {...dragProvided.draggableProps}
+                                      className="bg-white mb-2"
+                                    >
+                                      <PlaceItem
+                                        place={place}
+                                        isEditMode={isEditMode}
+                                        dragHandleProps={dragProvided.dragHandleProps}
+                                        isChecked={selectedItems.has(place.id)}
+                                        onToggle={() => onToggleSelect(place.id)}
+                                      />
+                                    </div>
+                                  )}
+                                </Draggable>
+                              );
+                            })
+                          ) : (
+                            <div className="py-8 text-center text-gray-400 text-sm">
+                              아직 일정이 없어요
                             </div>
                           )}
-                          <Draggable key={draggableId} draggableId={draggableId} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className="bg-white"
-                              >
-                                <PlaceItem
-                                  place={place}
-                                  isEditMode={isEditMode}
-                                  dragHandleProps={provided.dragHandleProps}
-                                  isChecked={selectedItems.has(place.id)}
-                                  onToggle={() => onToggleSelect(place.id)}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        </Fragment>
-                      );
-                    })}
-                    {provided.placeholder}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </div>
+                );
+              }
+              return <div>{renderElements}</div>;
+            })()}
+          </DragDropContext>
         ) : (
-          places.map((place: any, index: number) => {
-            const isFirstOfDay = index === 0 || places[index - 1].day !== place.day;
-            const uniqueKey = place.id ? `view-place-${place.id}` : `view-place-${index}`;
+          <div>
+            {(() => {
+              const maxDay = places.length > 0 ? Math.max(...places.map((p: any) => p.day)) : 1;
+              const renderList = [];
 
-            return (
-              <div key={uniqueKey}>
-                {isFirstOfDay && (
-                  <div className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
-                    <span>Day {place.day}</span>
-                    <div className="flex-1 h-[1px] bg-gray-100" />
+              for (let day = 1; day <= maxDay; day++) {
+                const dayPlaces = places.filter((p: any) => p.day === day);
+
+                // Header
+                renderList.push(
+                  <div key={`view-header-${day}`} className="flex items-center gap-2 mb-4 mt-6 first:mt-0 text-[#42BCEB] font-bold">
+                    <span>Day {day}</span>
+                    <div className="flex-1 h-[1px] bg-black" />
                   </div>
-                )}
-                <PlaceItem
-                  place={place}
-                  isEditMode={false}
-                  onShareClick={(rect: DOMRect) => {
-                    if (onShareClick) onShareClick(place, rect);
-                  }}
-                />
-              </div>
-            );
-          })
+                );
+
+                // List
+                if (dayPlaces.length > 0) {
+                  dayPlaces.forEach((place: any, index: number) => {
+                    const uniqueKey = place.id ? `view-place-${place.id}` : `view-place-idx-${day}-${index}`;
+                    renderList.push(
+                      <PlaceItem
+                        key={uniqueKey}
+                        place={place}
+                        isEditMode={false}
+                        onShareClick={(rect: DOMRect) => {
+                          if (onShareClick) onShareClick(place, rect);
+                        }}
+                      />
+                    );
+                  });
+                } else {
+                  renderList.push(
+                    <div key={`view-empty-${day}`} className="py-8 text-center text-gray-400 text-sm">
+                      아직 일정이 없어요
+                    </div>
+                  );
+                }
+              }
+              return renderList;
+            })()}
+          </div>
         )}
       </div>
     </div>

@@ -222,9 +222,33 @@ export default function MyCourseDetailPage() {
                 placesByDay[place.day].push(place);
             });
 
-            const itineraries = Object.keys(placesByDay).map(dayStr => {
-                const day = Number(dayStr);
-                const dayPlaces = placesByDay[day];
+            // 날짜 형식 보장 (YYYY-MM-DD or null)
+            const ensureDateFormat = (dateStr: string | null | undefined) => {
+                if (!dateStr) return null;
+                if (dateStr.includes('T')) return dateStr.split('T')[0];
+                return dateStr;
+            };
+
+            const sDate = ensureDateFormat(courseDetail.startDate);
+            const eDate = ensureDateFormat(courseDetail.endDate);
+
+            // 전체 일수 계산 (날짜 범위 기준)
+            let totalDays = 1;
+            if (sDate && eDate) {
+                const start = new Date(sDate);
+                const end = new Date(eDate);
+                // 시간대 영향 제거를 위해 절대값 사용 및 일수 계산
+                const diffTime = Math.abs(end.getTime() - start.getTime());
+                totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            }
+
+            // 장소가 있는 마지막 날짜도 고려 (혹시 날짜 범위를 벗어난 장소가 있을 경우)
+            const maxPlaceDay = places.length > 0 ? Math.max(...places.map(p => p.day)) : 1;
+            const finalTotalDays = Math.max(totalDays, maxPlaceDay);
+
+            const itineraries = [];
+            for (let day = 1; day <= finalTotalDays; day++) {
+                const dayPlaces = placesByDay[day] || [];
 
                 const items = dayPlaces.map((p, index) => {
                     // 순서 명시 (1부터 시작)
@@ -238,24 +262,17 @@ export default function MyCourseDetailPage() {
                     return { placeId: p.placeId, visitOrder };
                 });
 
-                return {
+                itineraries.push({
                     visitDay: day,
                     items: items
-                };
-            });
-
-            // 날짜 형식 보장 (YYYY-MM-DD or null)
-            const ensureDateFormat = (dateStr: string | null | undefined) => {
-                if (!dateStr) return null;
-                if (dateStr.includes('T')) return dateStr.split('T')[0];
-                return dateStr;
-            };
+                });
+            }
 
             const payload: UpdateMyCourseDetailRequest = {
                 courseTitle: courseDetail.courseTitle,
                 travelStatus: courseDetail.travelStatus,
-                startDate: ensureDateFormat(courseDetail.startDate),
-                endDate: ensureDateFormat(courseDetail.endDate),
+                startDate: sDate,
+                endDate: eDate,
                 itineraries: itineraries
             };
 
