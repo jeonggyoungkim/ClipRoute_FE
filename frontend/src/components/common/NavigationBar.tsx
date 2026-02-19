@@ -36,7 +36,7 @@ export default function NavigationBar() {
   };
 
   return (
-    <nav className="fixed bottom-4 left-0 right-0 z-50 flex w-[90%] max-w-md h-16 justify-around items-center rounded-full bg-white shadow-[0_0_10px_0_rgba(0,0,0,0.1)] mx-auto border border-gray-50 px-6">
+    <nav className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex w-[22.0625rem] h-[4.0625rem] max-w-[calc(100%-2rem)] items-center justify-center gap-x-[3.44rem] rounded-full bg-white shadow-[0_0_10px_0_rgba(0,0,0,0.1)] border border-gray-50 px-2">
       {NAV_MENU.map((item) => {
         // 현재 경로가 item.path와 일치하는지 확인하여 활성화 상태 결정
         const isActive = location.pathname === item.path;
@@ -45,11 +45,11 @@ export default function NavigationBar() {
           <button
             key={item.id}
             onClick={() => handleNavigation(item.path)}
-            className="flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90"
+            className="flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-90 h-full w-auto min-w-[3rem] whitespace-nowrap"
           >
             <item.Icon isActive={isActive} size={24} />
             <span
-              className={`text-sm transition-colors duration-200 ${isActive ? 'text-[#42BCEB] font-bold' : 'text-gray-400'
+              className={`text-sm transition-colors duration-200 ${isActive ? 'text-[#42BCEB] font-bold' : 'text-black'
                 }`}
             >
               {item.label}
