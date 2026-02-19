@@ -1,12 +1,13 @@
+import { useRef, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import NavigationLayout from "../layouts/NavigationLayout";
 import Header from "../components/common/Header";
 import backicon from "../assets/icons/back-icon.svg";
 import mappinicon from "../assets/icons/mappin-icon.svg";
 import calendaricon from "../assets/icons/calendar-icon.svg";
 import VideoCard from "../components/VideoCard";
-import { fetchCourses } from "../api/courses";
+import { fetchRecommendedCourses } from "../api/courses";
 
 const CourseListPage = () => {
   const [searchParams] = useSearchParams();
@@ -19,34 +20,80 @@ const CourseListPage = () => {
   const regionId = regionIdParam ? Number(regionIdParam) : null;
   const travelDays = travelDaysParam !== null ? Number(travelDaysParam) : null;
 
+  // 무한 스크롤 관찰용 ref
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["courseList", regionId, travelDays],
-    queryFn: () =>
-      fetchCourses({
-        pageParam: 0,
-        destination: regionId ? { regionId } : null,
-        travelDays: travelDays !== null ? travelDays + 1 : null, // 1박 2일 선택하면 2일로 변환
-        isFilterMode: true,
-        isRep: true,
+    queryFn: ({ pageParam }) =>
+      fetchRecommendedCourses({
+        pageParam,
+        regionId: regionId!,
+        travelDays: travelDays! + 1, // 1박 2일 -> 2일
       }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage || !lastPage.result) return undefined;
+      const { sliceInfo } = lastPage.result;
+      return sliceInfo.hasNext ? sliceInfo.currentPage + 1 : undefined;
+    },
+    enabled: regionId !== null && travelDays !== null,
   });
+
+  // IntersectionObserver로 스크롤 감지
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (observerRef.current) observer.observe(observerRef.current);
+
+    return () => {
+      if (observerRef.current) observer.unobserve(observerRef.current);
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  if (regionId === null || travelDays === null) {
+    return (
+      <div className="p-10 text-center text-gray-500 font-medium">
+        잘못된 접근입니다. 여행지 및 날짜를 선택해주세요.
+      </div>
+    );
+  }
 
   if (isLoading)
     return (
       <div className="p-10 text-center font-medium">
-        로딩 중...
+        맞춤 코스를 찾고 있어요...
       </div>
     );
 
   if (isError)
     return (
-      <div className="p-10 text-center text-red-500 font-medium">
-        에러가 발생했습니다.
+      <div className="p-10 text-center text-red-500 font-medium whitespace-pre-line">
+        코스를 추천하는 중 오류가 발생했습니다.{"\n"}
+        잠시 후 다시 시도해주세요.
       </div>
     );
 
-  const courseList = data?.result?.courseList || [];
+  // 모든 페이지의 데이터를 하나로 합침 (Safety Check 추가)
+  const courseList = data?.pages.flatMap((page) => page?.result?.courseList || []) || [];
+
+  // 맞춤 코스와 추천 코스 분리 (isRecommended: false -> 맞춤, true -> 추천)
+  const customizedCourses = courseList.filter(course => !course.isRecommended);
+  const recommendedCourses = courseList.filter(course => course.isRecommended);
 
   // 지역 이름
   const displayRegionName =
@@ -126,34 +173,76 @@ const CourseListPage = () => {
             </div>
           </div>
 
-          {/* 추천 섹션 헤더 */}
-          <div className="mb-4">
-            <h2 className="font-bold text-lg mb-1">
-              {displayRegionName} 여행 추천
-            </h2>
-            <p className="text-sm text-gray-400">
-              조건에 맞는 여행 코스를 추천했어요!
-            </p>
+          {/* 1. 조건에 맞는 맞춤 코스 섹션 */}
+          {customizedCourses.length > 0 && (
+            <div className="mb-10 animate-fade-in">
+              <div className="mb-4">
+                <h2 className="font-bold text-lg mb-1 text-[#333]">
+                  {displayRegionName} 여행 추천
+                </h2>
+                <p className="text-sm text-gray-400">
+                  조건에 맞는 여행 코스를 추천했어요!
+                </p>
+              </div>
+              <div className="space-y-4">
+                {customizedCourses.map((course) => (
+                  <VideoCard
+                    key={`custom-${course.courseId}`}
+                    course={course}
+                    onClick={() => navigate(`/courses/${course.courseId}?${searchParams.toString()}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 2. 비슷한 여행 코스 추천 섹션 (무한 스크롤) */}
+          {(recommendedCourses.length > 0 || customizedCourses.length === 0) && (
+            <div className={`mb-2 animate-fade-in ${customizedCourses.length > 0 ? "pt-4 border-t border-gray-100" : ""}`}>
+              {/* 추천 섹션 헤더 (조건에 맞는 게 있으면 구분 목적) */}
+              {(customizedCourses.length > 0 || recommendedCourses.length > 0) && (
+                <div className="mb-4">
+                  <h2 className="font-bold text-lg mb-1 text-[#333]">
+                    비슷한 여행 코스 추천
+                  </h2>
+                  <p className="text-xs text-gray-400">
+                    조건에 맞는 여행 코스가 소진되어 비슷한 여행 코스를 추천해드려요!
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {recommendedCourses.map((course) => (
+                  <VideoCard
+                    key={`rec-${course.courseId}`}
+                    course={course}
+                    onClick={() => navigate(`/courses/${course.courseId}?${searchParams.toString()}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 코스가 아예 없을 경우 */}
+          {customizedCourses.length === 0 && recommendedCourses.length === 0 && !isLoading && !isFetchingNextPage && (
+            <div className="text-center text-gray-500 py-20 bg-gray-50 rounded-xl mt-4">
+              <p className="mb-2">조건에 맞는 여행 코스가 없습니다.</p>
+              <p className="text-sm">다른 지역이나 날짜로 검색해보세요.</p>
+            </div>
+          )}
+
+          {/* 무한 스크롤 감지용 태그 및 로딩바 */}
+          <div ref={observerRef} className="h-10 mt-4 flex justify-center items-center">
+            {isFetchingNextPage && <span className="text-gray-400 text-sm">더 불러오는 중...</span>}
           </div>
 
-          {/* 비디오 리스트 */}
-          <div className="space-y-4">
-            {courseList.length > 0 ? (
-              courseList.map((course) => (
-                <VideoCard
-                  key={course.courseId}
-                  course={course}
-                  onClick={() =>
-                    navigate(`/courses/${course.courseId}`)
-                  }
-                />
-              ))
-            ) : (
-              <div className="text-center text-gray-500 py-10">
-                여행 코스가 없습니다.
-              </div>
-            )}
-          </div>
+          {/* 더 이상 불러올 데이터가 없을 때 완료 메시지 */}
+          {!hasNextPage && (customizedCourses.length > 0 || recommendedCourses.length > 0) && (
+            <div className="text-center mt-6 pt-8 pb-10 border-t border-gray-200">
+              <p className="text-xs text-gray-400">조건에 맞는 코스가 모두 소진되었습니다..</p>
+            </div>
+          )}
+
         </main>
 
         {/* Top 버튼 */}
