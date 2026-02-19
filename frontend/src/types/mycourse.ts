@@ -1,5 +1,6 @@
 import type { ApiResponse } from "../types/common";
 
+// --- 기존 타입 유지 ---
 export interface CourseItem {
     courseId: number;
     memberCourseId: number;
@@ -7,12 +8,13 @@ export interface CourseItem {
     regionName: string;
     regionImageUrl: string;
     thumbnailUrl: string;
-    startDate: string | null
+    startDate: string | null;
     endDate: string | null;
     travelDays: number;
     travelStatus: "BEFORE" | "ONGOING" | "COMPLETED" | "AFTER";
     placeCount: number;
     createdAt: string;
+    yt_video_id?: string; // 유튜브 비디오 ID (썸네일 생성용)
 }
 
 export interface MyCoursesResult {
@@ -33,9 +35,7 @@ export interface DeleteMyCoursesResponse {
     message: string;
 }
 
-// 나의 코스 상세 조회 및 수정 타입 
-
-// 나의 코스 각 장소의 상세 정보
+// --- 나의 코스 상세 조회 (Response) ---
 export interface MyCoursePlace {
     visitOrder: number;
     coursePlaceId: number;
@@ -49,18 +49,15 @@ export interface MyCoursePlace {
     deletedAt: string | null;
 }
 
-// 나의 코스 일차별 일정 (여행 일차와 해당 일차에 방문할 장소 목록 그룹화)
 export interface MyCourseItinerary {
     visitDay: number;
     places: MyCoursePlace[];
 }
 
-// 특정 코스의 제목, 여행 기간, 상태, 스크랩 여부 등 전체 상세 정보
 export interface MyCourseDetail {
     courseId: number;
     videoTitle: string;
-    videoUrl: string;
-    thumbnailUrl: string;
+    yt_video_id: string;
     channelName: string;
     regionId: number;
     regionName: string;
@@ -74,7 +71,31 @@ export interface MyCourseDetail {
 
 export type MyCourseDetailResponse = ApiResponse<MyCourseDetail>;
 
-// 필터 옵션 조회 응답 타입
+
+// --- 나의 코스 수정 (Request) ---
+// 편집 모드 저장 시 사용되는 타입 정의
+
+export interface UpdateMyCourseItem {
+    coursePlaceId?: number; // 기존 장소일 경우 필수 (placeId는 생략 가능하거나 무시됨)
+    placeId?: number;       // 새로 추가된 장소일 경우 필수 (coursePlaceId 없음)
+    visitOrder?: number;    // 명시적 순서 부여
+}
+
+export interface UpdateMyCourseItinerary {
+    visitDay: number;
+    items: UpdateMyCourseItem[]; // places가 아니라 items임
+}
+
+export interface UpdateMyCourseDetailRequest {
+    courseTitle: string;
+    startDate: string | null;
+    endDate: string | null;
+    travelStatus: "BEFORE" | "ONGOING" | "COMPLETED" | "AFTER";
+    itineraries: UpdateMyCourseItinerary[];
+}
+
+
+// --- 필터 옵션 ---
 export interface FilterOptionResult {
     regions: {
         id: number;
