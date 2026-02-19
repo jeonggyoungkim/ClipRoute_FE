@@ -1,6 +1,6 @@
 import type { CourseListResult } from '../types/video';
 import type { ApiResponse } from "../types/common";
-import type { ScrapResult } from '../types/course';
+
 import api from '../api/axios';
 import axios from 'axios';
 
