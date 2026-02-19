@@ -105,8 +105,10 @@ export default function MyCoursePage() {
       filteredCourses.forEach(course => {
         let yearMonth = '날짜 미정';
 
-        if (course.startDate && course.startDate.includes('.')) {
-          const parts = course.startDate.split('.');
+        const dateStr = course.startDate?.replace(/-/g, '.'); // 하이픈을 점으로 통일
+
+        if (dateStr && dateStr.includes('.')) {
+          const parts = dateStr.split('.');
           if (parts.length >= 2) {
             yearMonth = `${parts[0]}.${parts[1]}`;
           }
