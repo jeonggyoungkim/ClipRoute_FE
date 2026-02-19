@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-interface AgreementState {
+export interface AgreementState {
   all: boolean;
   terms: boolean;
   privacy: boolean;
