@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import NavigationLayout from "../layouts/NavigationLayout";
@@ -8,6 +8,7 @@ import mappinicon from "../assets/icons/mappin-icon.svg";
 import calendaricon from "../assets/icons/calendar-icon.svg";
 import VideoCard from "../components/VideoCard";
 import { fetchRecommendedCourses } from "../api/courses";
+import LoadingPage from "./LoadingPage";
 
 const CourseListPage = () => {
   const [searchParams] = useSearchParams();
@@ -73,12 +74,20 @@ const CourseListPage = () => {
     );
   }
 
-  if (isLoading)
-    return (
-      <div className="p-10 text-center font-medium">
-        맞춤 코스를 찾고 있어요...
-      </div>
-    );
+  // 최소 로딩 시간 관리
+  const [isMinTimeElapsed, setIsMinTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    // 2.5초 후에 최소 로딩 시간이 지난 것으로 설정
+    const timer = setTimeout(() => {
+      setIsMinTimeElapsed(true);
+    }, 2700);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // API 로딩 중이거나 최소 시간이 지나지 않았으면 로딩 페이지 표시
+  if (isLoading || !isMinTimeElapsed) return <LoadingPage />;
 
   if (isError)
     return (
