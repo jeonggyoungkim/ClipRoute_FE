@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import Checkbox from "../common/Checkbox";
 import shareIcon from "../../assets/icons/share-icon.svg";
 
@@ -18,26 +18,59 @@ const SearchPlaceBottomSheet = ({
     regionName = "검색된"
 }: SearchPlaceBottomSheetProps) => {
     const listRef = useRef<HTMLDivElement>(null);
+    const [isVisible, setIsVisible] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(true);
 
-    // 검색 결과가 바뀌면 스크롤 맨 위로 이동
+    // 컴포넌트 마운트 시 애니메이션 트리거
     useEffect(() => {
+        const timer = setTimeout(() => setIsVisible(true), 50);
+        return () => clearTimeout(timer);
+    }, []);
+
+    // 검색 결과가 바뀌면 스크롤 맨 위로 이동 (리스트가 열려있지 않으면 열어줌)
+    useEffect(() => {
+        if (places.length > 0) {
+            setIsExpanded(true);
+        }
         if (listRef.current) {
             listRef.current.scrollTop = 0;
         }
     }, [places]);
 
-    return (
-        <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-white rounded-t-[24px] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-20 flex flex-col animate-slide-up">
-            {/* 드래그 핸들 */}
-            <div className="w-full flex justify-center pt-[10px] pb-[20px]">
-                <div className="w-[3.75rem] h-[0.1875rem] bg-[#E4E4E4] rounded-full" />
-            </div>
+    // 바텀시트 위치 계산
+    // isVisible false: 화면 아래로 완전히 숨김 (초기 상태)
+    // isVisible true & isExpanded true: 화면에 표시
+    // isVisible true & isExpanded false: 헤더만 남기고 아래로 내림 (60px은 헤더 높이 대략값)
+    const getTransformStyle = () => {
+        if (!isVisible) return 'translateY(100%)';
+        return isExpanded ? 'translateY(0)' : 'translateY(calc(100% - 60px))';
+    };
 
-            {/* 헤더 */}
-            <div className="px-5 py-3 flex-shrink-0">
-                <h3 className="text-[16px] font-bold text-[#333]">
-                    {regionName} 장소 리스트
-                </h3>
+    const toggleExpanded = () => {
+        setIsExpanded(prev => !prev);
+    };
+
+    return (
+        <div
+            className="absolute bottom-0 left-0 right-0 h-[50%] bg-white rounded-t-[24px] shadow-[0_-4px_20px_rgba(0,0,0,0.1)] z-20 flex flex-col transition-transform duration-500 ease-in-out"
+            style={{ transform: getTransformStyle() }}
+        >
+            {/* 드래그 핸들 및 헤더 영역 (클릭 시 토글) */}
+            <div
+                className="w-full flex flex-col cursor-pointer"
+                onClick={toggleExpanded}
+            >
+                {/* 드래그 핸들 */}
+                <div className="w-full flex justify-center pt-[10px] pb-[10px]">
+                    <div className="w-[3.75rem] h-[0.1875rem] bg-[#E4E4E4] rounded-full" />
+                </div>
+
+                {/* 헤더 */}
+                <div className="px-5 pb-3 flex-shrink-0">
+                    <h3 className="text-[16px] font-bold text-[#333]">
+                        {regionName} 장소 리스트
+                    </h3>
+                </div>
             </div>
 
             {/* 장소 리스트 */}
