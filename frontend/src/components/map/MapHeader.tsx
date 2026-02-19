@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import backIcon from "../../assets/icons/back-icon.svg";
 import saveIcon from "../../assets/icons/save-icon.svg";
 import LoginPopup from "../popups/LoginPopup";
@@ -12,6 +12,9 @@ interface MapHeaderProps {
 
 const MapHeader = ({ courseId, videoTitle }: MapHeaderProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
   const [showSaveTooltip, setShowSaveTooltip] = useState(true);
   const [isLoginPopupOpen, setIsLoginPopupOpen] = useState(false);
   const { mutate: scrap, isPending } = useScrapCourse();
@@ -37,15 +40,18 @@ const MapHeader = ({ courseId, videoTitle }: MapHeaderProps) => {
 
     // 로그인 되어 있으면 스크랩
     if (courseId) {
-      scrap(courseId, {
-        onSuccess: () => {
-          alert('✅ 내 코스에 저장되었어요!');
-          // TODO: UX 개선 필요 
-        },
-        onError: () => {
-          alert('❌ 스크랩에 실패했습니다. 다시 시도해주세요.');
+      scrap(
+        { courseId, startDate, endDate },
+        {
+          onSuccess: () => {
+            alert('✅ 내 코스에 저장되었어요!');
+            // TODO: UX 개선 필요 
+          },
+          onError: () => {
+            alert('❌ 스크랩에 실패했습니다. 다시 시도해주세요.');
+          }
         }
-      });
+      );
     }
   };
 
