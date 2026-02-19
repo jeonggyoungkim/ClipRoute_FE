@@ -71,7 +71,8 @@ const DestinationModal = ({ isOpen, onClose, onSelect }: DestinationModalProps) 
               >
                 <div className="w-[4.6875rem] h-[4.6875rem] rounded-full overflow-hidden mb-3 border border-gray-100 shadow-sm">
                   <img
-                    src={region.imageUrl}
+                    // S3 URL 구조: https://cliproute-images.s3.ap-northeast-2.amazonaws.com/images/regions/{region_name}.jpg
+                    src={`https://cliproute-images.s3.ap-northeast-2.amazonaws.com/images/regions/${region.regionName}.jpg`}
                     alt={region.regionName}
                     className="w-full h-full object-cover"
                     onError={(e) => {
