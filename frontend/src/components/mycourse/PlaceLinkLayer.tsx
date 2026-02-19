@@ -34,8 +34,12 @@ const PlaceLinkLayer = ({ place, rect, onClose }: PlaceLinkLayerProps) => {
         const query = encodeURIComponent(`${place.name} ${place.address || ''}`);
 
         if (type === 'youtube') {
-            // 유튜브 검색 결과
-            url = `https://m.youtube.com/results?search_query=${query}`;
+            // 유튜브: 비디오 ID가 있으면 해당 영상으로 이동, 없으면 검색 결과
+            if (place.yt_video_id) {
+                url = `https://www.youtube.com/watch?v=${place.yt_video_id}`;
+            } else {
+                url = `https://m.youtube.com/results?search_query=${query}`;
+            }
         } else {
             // 네이버 지도
             if (place.lat && place.lng) {

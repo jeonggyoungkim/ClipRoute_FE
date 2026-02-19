@@ -29,6 +29,7 @@ interface Itinerary {
 interface CourseDetailResult {
   courseId: number;
   videoTitle: string;
+  yt_video_id: string;
   videoUrl: string;
   thumbnailUrl: string;
   channelName: string;
@@ -57,6 +58,7 @@ interface MapPlace {
   lat: number;
   lng: number;
   timestamp?: number;
+  yt_video_id?: string;
 }
 
 const CourseDetailPage = () => {
@@ -97,6 +99,7 @@ const CourseDetailPage = () => {
       lat: place.lat,
       lng: place.lng,
       timestamp: place.timestamp,
+      yt_video_id: data.result.yt_video_id,
     }))
   );
 
@@ -117,8 +120,8 @@ const CourseDetailPage = () => {
         places={places}
         onShareClick={(place: any, rect: DOMRect) => setActivePlace({ place, rect })}
       />
-      <button className="absolute bottom-[100px] right-4 z-10 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
-        <img src={positionicon} alt="current position" />
+      <button className="absolute bottom-[90px] right-4 z-10 w-12 h-12">
+        <img src={positionicon} alt="" />
       </button>
     </div>
   );
