@@ -64,10 +64,6 @@ export default function MyCourseFilters({
 
                 {isRegionOpen && (
                     <ul className="absolute top-full right-0 mt-1 flex flex-col items-start gap-[0.9375rem] w-[6.25rem] p-[0.625rem_0.9375rem] bg-white border border-[#D2D2D2] rounded-[0.625rem] shadow-sm z-20 max-h-[200px] overflow-y-auto scrollbar-hide">
-                        {/* 타이틀 (선택 불가) */}
-                        <li className="text-[0.875rem] font-medium leading-[0.875rem] text-[#606060] pointer-events-none">
-                            지역
-                        </li>
                         <li
                             className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer ${selectedRegionId === null ? 'text-[#606060]' : 'text-black'}`}
                             onClick={(e) => {
@@ -96,8 +92,6 @@ export default function MyCourseFilters({
             </div>
 
             {/* 여행 기간 필터 */}
-            {/* 여행 기간 필터 (Custom Dropdown) */}
-            {/* 여행 기간 필터 (Custom Dropdown) */}
             <div
                 ref={sortRef}
                 className="relative inline-flex items-center gap-[0.31rem] cursor-pointer"
@@ -114,10 +108,6 @@ export default function MyCourseFilters({
 
                 {isSortOpen && (
                     <ul className="absolute top-full right-0 mt-1 flex flex-col items-start gap-[0.9375rem] w-[6.25rem] p-[0.625rem_0.9375rem] bg-white border border-[#D2D2D2] rounded-[0.625rem] shadow-sm z-20 max-h-[200px] overflow-y-auto scrollbar-hide">
-                        {/* 타이틀 (선택 불가) */}
-                        <li className="text-[0.875rem] font-medium leading-[0.875rem] text-[#606060] pointer-events-none">
-                            여행 기간
-                        </li>
                         <li
                             className={`text-[0.875rem] font-medium leading-[0.875rem] cursor-pointer whitespace-nowrap ${selectedTravelDay === null ? 'text-[#606060]' : 'text-black'}`}
                             onClick={(e) => {
