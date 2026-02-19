@@ -361,6 +361,7 @@ export default function MyCourseDetailPage() {
                     place={activePlace.place}
                     rect={activePlace.rect}
                     onClose={() => setActivePlace(null)}
+                    showYoutube={false} // 나의 코스 상세에서는 네이버만 표시
                 />
             )}
 
