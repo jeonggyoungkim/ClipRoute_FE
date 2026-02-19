@@ -2,18 +2,25 @@ import { useState, useEffect } from 'react';
 import GoogleMap from '../GoogleMap';
 import backIcon from '../../assets/icons/back-icon.svg';
 import { fetchPlaceSearch } from '../../api/searchPlace';
-import { CATEGORIES } from '../../constants/categories';
+import CategoryFilter from '../common/CategoryFilter';
+import SearchPlaceBottomSheet from './SearchPlaceBottomSheet';
 
 interface AddPlaceModalProps {
     isOpen: boolean;
     onClose: () => void;
     onPlaceSelect?: (place: any) => void;
     regionId?: number;
+    regionName?: string;
 }
 
-const AddPlaceModal = ({ isOpen, onClose, regionId }: AddPlaceModalProps) => {
+const AddPlaceModal = ({ isOpen, onClose, onPlaceSelect, regionId, regionName }: AddPlaceModalProps) => {
     const [tempPlaces, setTempPlaces] = useState<any[]>([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [selectedPlace, setSelectedPlace] = useState<any | null>(null);
+
+    useEffect(() => {
+        setSelectedPlace(null);
+    }, [tempPlaces, isOpen]);
 
     useEffect(() => {
         if (isOpen && regionId) {
@@ -56,37 +63,39 @@ const AddPlaceModal = ({ isOpen, onClose, regionId }: AddPlaceModalProps) => {
             </div>
 
             {/* 상단 플로팅 헤더 (카드 형태) */}
-            <div className="absolute top-8 left-4 right-4 z-10 flex flex-col gap-3">
+            <div className="absolute top-5 left-4 right-4 z-10 flex flex-col gap-3">
                 <div className="bg-white rounded-xl border border-[#42BCEB] p-3 flex items-center gap-3">
                     <button onClick={onClose} className="p-1 -ml-1">
                         <img src={backIcon} alt="뒤로가기" className="w-4 h-4" />
                     </button>
-                    <span className="font-bold text-lg">부산 장소 리스트</span>
+                    <span className="font-bold text-lg">{regionName ? `${regionName} 장소 리스트` : "장소 리스트"}</span>
                 </div>
 
                 {/* 카테고리 필터 */}
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide px-1">
-                    {CATEGORIES.map((cat) => (
-                        <button
-                            key={cat.id}
-                            onClick={() => setSelectedCategory(cat.id)}
-                            className={`
-                                flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm border transition-all whitespace-nowrap
-                                ${selectedCategory === cat.id
-                                    ? 'bg-[#42BCEB] text-white border-[#42BCEB]'
-                                    : 'bg-white text-gray-700 border-white/80 hover:bg-gray-50'}
-                            `}
-                        >
-                            {cat.icon && (
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className={selectedCategory === cat.id ? "text-white" : "text-[#42BCEB]"}>
-                                    {cat.icon}
-                                </svg>
-                            )}
-                            {cat.name}
-                        </button>
-                    ))}
-                </div>
+                <CategoryFilter
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={setSelectedCategory}
+                />
             </div>
+
+            {/* 하단 장소 검색 시트 (분리된 컴포넌트) */}
+            <SearchPlaceBottomSheet
+                places={tempPlaces}
+                selectedPlace={selectedPlace}
+                onSelect={(place) => {
+                    if (selectedPlace?.placeId === place.placeId) {
+                        setSelectedPlace(null);
+                    } else {
+                        setSelectedPlace(place);
+                    }
+                }}
+                onAdd={() => {
+                    if (onPlaceSelect && selectedPlace) {
+                        onPlaceSelect(selectedPlace);
+                    }
+                }}
+                regionName={regionName}
+            />
 
             <style>{`
                 @keyframes modalUp { 
@@ -95,6 +104,14 @@ const AddPlaceModal = ({ isOpen, onClose, regionId }: AddPlaceModalProps) => {
                 }
                 .animate-modal-up { 
                   animation: modalUp 0.3s cubic-bezier(0.33, 1, 0.68, 1) forwards; 
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(100%); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                .animate-slide-up {
+                    animation: slideUp 0.4s ease-out 0.2s forwards;
+                    opacity: 0; /* 초기 상태 숨김 */
                 }
             `}</style>
         </div>
