@@ -30,6 +30,23 @@ export default function CourseCard({
     ? `https://cliproute-images.s3.ap-northeast-2.amazonaws.com/images/courses/${yt_video_id}.jpg`
     : thumbnailUrl;
 
+  const formatDateRange = (start: string | null, end: string | null) => {
+    if (!start) return "";
+    const formattedStart = start.replace(/-/g, '.');
+
+    if (!end) return formattedStart;
+    const formattedEnd = end.replace(/-/g, '.');
+
+    // 연도가 같으면 뒤쪽 연도 생략 (예: 2026.01.26 - 01.28)
+    const startYear = formattedStart.split('.')[0];
+    const endYear = formattedEnd.split('.')[0];
+
+    if (startYear === endYear) {
+      return `${formattedStart} - ${formattedEnd.substring(5)}`; // 'YYYY.' (5글자) 제거
+    }
+    return `${formattedStart} - ${formattedEnd}`;
+  };
+
   return (
     <div
       className={`bg-white rounded-2xl border p-4 cursor-pointer transition-all ${isSelected ? "border-[#42BCEB] bg-blue-50" : "border-[#E8E8E8]"
@@ -71,10 +88,10 @@ export default function CourseCard({
           <div className="flex flex-col justify-between flex-1">
             <div>
               <h3 className="text-[1.125rem] font-semibold text-black leading-tight mt-1">
-                {courseTitle}
+                {regionName}
               </h3>
               <p className="text-sm text-black font-normal mt-1">
-                {startDate} - {endDate}
+                {formatDateRange(startDate, endDate)}
               </p>
             </div>
           </div>
@@ -99,13 +116,13 @@ export default function CourseCard({
 
       {/* 태그 영역 */}
       <div className="flex flex-wrap gap-2">
-        <span className="text-[0.75rem] font-semibold text-[#34B1E9] px-2 py-1">
+        <span className="text-xs font-semibold text-[#42BCEB] px-2 py-1">
           장소 개수 : {placeCount}개
         </span>
-        <span className="text-[0.75rem] font-semibold text-[#34B1E9] px-2 py-1">
+        <span className="text-xs font-s text-[#42BCEB] px-2 py-1">
           #{regionName}
         </span>
-        <span className="text-[0.75rem] font-semibold text-[#34B1E9] px-2 py-1">
+        <span className="text-xs font-semibold text-[#42BCEB] px-2 py-1">
           #{formatDuration(travelDays)}
         </span>
       </div>
