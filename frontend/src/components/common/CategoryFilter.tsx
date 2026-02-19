@@ -23,7 +23,7 @@ const CategoryFilter = ({ selectedCategory, onSelectCategory }: CategoryFilterPr
                         <svg
                             width="14"
                             height="14"
-                            viewBox="0 0 24 24"
+                            viewBox={(cat as any).viewBox || "0 0 24 24"}
                             fill="currentColor"
                             className={selectedCategory === cat.id ? "text-white" : "text-[#42BCEB]"}
                         >
