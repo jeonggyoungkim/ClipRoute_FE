@@ -43,10 +43,45 @@ const PlaceLinkLayer = ({ place, rect, onClose }: PlaceLinkLayerProps) => {
         } else {
             // 네이버 지도
             if (place.lat && place.lng) {
-                // 좌표가 있는 경우 지도 화면으로 직접 이동
-                url = `https://map.naver.com/v5/?c=${place.lng},${place.lat},15,0,0,0,dh`;
+                const lat = place.lat;
+                const lng = place.lng;
+                const name = encodeURIComponent(place.name);
+
+                // 1. 앱 실행 스키마 (좌표 + 장소명 핀 표시)
+                const appUrl = `nmap://place?lat=${lat}&lng=${lng}&name=${name}&appname=ClipRoute`;
+
+                // 2. 웹 폴백 URL (모바일 웹/PC 웹)
+                // 모바일 웹에서는 좌표+장소명 검색 결과로 연결하여 유사한 UX 제공
+                const webUrl = `https://map.naver.com/v5/search/${name}?c=${lng},${lat},15,0,0,0,dh`;
+
+                // 모바일 기기인지 확인
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // 앱 실행 시도 (Deep Link)
+                    const clickedAt = +new Date();
+
+                    // iframe을 통한 앱 실행 시도 (일부 브라우저 호환성)
+                    const iframe = document.createElement('iframe');
+                    iframe.style.visibility = 'hidden';
+                    iframe.src = appUrl;
+                    document.body.appendChild(iframe);
+
+                    // 1.5초 후에도 앱으로 이동하지 않았다면 웹으로 이동
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        if (+new Date() - clickedAt < 2000) {
+                            window.open(webUrl, '_blank');
+                        }
+                    }, 1500);
+                } else {
+                    // 데스크탑에서는 바로 웹으로 이동
+                    window.open(webUrl, '_blank');
+                }
+
+                return; // 여기서 함수 종료 (window.open 중복 방지)
             } else {
-                // 좌표가 없는 경우 검색 결과 (모바일 웹)
+                // 좌표 없는 경우 단순 검색
                 url = `https://m.map.naver.com/search2/search.naver?query=${query}`;
             }
         }
