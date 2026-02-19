@@ -11,8 +11,6 @@ import { fetchCourses } from "../api/courses";
 const CourseListPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
-  // ✅ URL에서 필요한 값만 가져오기
   const startDateStr = searchParams.get("startDate");
   const endDateStr = searchParams.get("endDate");
   const regionIdParam = searchParams.get("regionId");
@@ -21,14 +19,14 @@ const CourseListPage = () => {
   const regionId = regionIdParam ? Number(regionIdParam) : null;
   const travelDays = travelDaysParam !== null ? Number(travelDaysParam) : null;
 
-  // ✅ 데이터 패칭
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["courseList", regionId, travelDays],
     queryFn: () =>
       fetchCourses({
         pageParam: 0,
         destination: regionId ? { regionId } : null,
-        travelDays: travelDays,
+        travelDays: travelDays !== null ? travelDays + 1 : null, // 1박 2일 선택하면 2일로 변환
         isFilterMode: true,
         isRep: true,
       }),
@@ -50,25 +48,25 @@ const CourseListPage = () => {
 
   const courseList = data?.result?.courseList || [];
 
-  // ✅ 지역 이름 — 서버 데이터 기준이 정답
+  // 지역 이름
   const displayRegionName =
     courseList.length > 0
       ? courseList[0].regionName
       : regionId
-      ? `${regionId}번 지역`
-      : "전체 지역";
+        ? `${regionId}번 지역`
+        : "전체 지역";
 
-  // ✅ 헤더용 일정 문구
+  // 헤더용 일정 문구
   const headerDaysText =
     travelDays === 0
       ? "당일치기"
       : travelDays === null
-      ? ""
-      : `${travelDays}박 ${travelDays + 1}일`;
+        ? ""
+        : `${travelDays}박 ${travelDays + 1}일`;
 
   const headerTitle = `${displayRegionName} ${headerDaysText} 여행 코스`.trim();
 
-  // ✅ 날짜 포맷 함수
+  // 날짜 포맷 함수
   function formatDate(dateStr: string | null) {
     if (!dateStr) return "";
     const d = new Date(dateStr);
@@ -78,7 +76,7 @@ const CourseListPage = () => {
     )}.${String(d.getDate()).padStart(2, "0")}`;
   }
 
-  // ✅ 입력 카드용 날짜 문구
+  // 입력 카드용 날짜 문구
   const getFormattedDateRange = () => {
     if (travelDays === null) return "날짜 미지정 (전체 일정)";
     if (travelDays === 0) return "당일치기 여행";
@@ -86,9 +84,8 @@ const CourseListPage = () => {
     if (startDateStr && endDateStr) {
       const start = formatDate(startDateStr);
       const end = formatDate(endDateStr).slice(5);
-      return `${start} - ${end} [${travelDays}박 ${
-        travelDays + 1
-      }일]`;
+      return `${start} - ${end} [${travelDays}박 ${travelDays + 1
+        }일]`;
     }
 
     return `${travelDays}박 ${travelDays + 1}일`;
