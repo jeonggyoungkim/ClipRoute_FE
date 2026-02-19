@@ -36,7 +36,7 @@ export default function VideoSection({
         destination,
         travelDays,
         isFilterMode,
-        isRep : true
+        isRep: true
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
@@ -65,7 +65,7 @@ export default function VideoSection({
     data?.pages.flatMap((page) => page.result.courseList) ?? [];
 
   const handleCourseClick = (courseId: number) => {
-    navigate(`/course/${courseId}`);
+    navigate(`/courses/${courseId}`);
   };
 
   const getSectionTitle = () => {
