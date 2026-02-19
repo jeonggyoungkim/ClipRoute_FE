@@ -1,21 +1,25 @@
+import { useNavigate } from "react-router-dom";
+
 interface LoginPopupProps {
-  isOpen: boolean;       
-  onClose: () => void;   
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 
 const LoginPopup = ({ isOpen, onClose }: LoginPopupProps) => {
+  const navigate = useNavigate();
+
   if (!isOpen) return null;
 
   return (
-    
+
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-      
-    
+
+
       <div className="w-[340px] bg-white rounded-[24px] p-7 shadow-xl relative animate-in fade-in zoom-in duration-200">
-        
+
         {/* 상단 닫기 버튼 */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-6 right-6 text-black"
         >
@@ -44,13 +48,14 @@ const LoginPopup = ({ isOpen, onClose }: LoginPopupProps) => {
 
         {/* 버튼 영역 */}
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={onClose}
             className="flex-1 h-[54px] border border-[#42BCEB] text-[#333] text-[16px] font-bold rounded-[14px] hover:bg-gray-50 transition-colors"
           >
             나중에 할게요
           </button>
-          <button 
+          <button
+            onClick={() => navigate('/login')}
             className="flex-1 h-[54px] bg-[#42BCEB] text-white text-[16px] font-bold rounded-[14px] shadow-sm active:bg-[#38a6d0] transition-colors"
           >
             로그인하기
