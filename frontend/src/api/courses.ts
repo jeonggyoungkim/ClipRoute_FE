@@ -53,7 +53,7 @@ export const fetchRecommendedCourses = async (
   }
 
   try {
-    const response = await api.get('/api/v1/courses/recommendation', { params: requestParams });
+    const response = await api.get('/api/v1/courses/recommendation?regionId', { params: requestParams });
     console.log('API 응답 성공 (추천)', response.data);
     return response.data;
   } catch (error: unknown) {
