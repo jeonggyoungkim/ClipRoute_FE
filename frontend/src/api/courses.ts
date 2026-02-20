@@ -35,19 +35,22 @@ export const fetchCourses = async (
 interface FetchRecommendedCoursesParams {
   pageParam: number;
   regionId: number;
-  travelDays: number;
+  travelDays?: number | null;
 }
 
 export const fetchRecommendedCourses = async (
   params: FetchRecommendedCoursesParams
 ): Promise<ApiResponse<CourseListResult>> => {
-  const requestParams = {
+  const requestParams: any = {
     page: params.pageParam,
     pageSize: 10,
     sort: 'random',
     regionId: params.regionId,
-    travelDays: params.travelDays,
   };
+
+  if (params.travelDays !== undefined && params.travelDays !== null) {
+    requestParams.travelDays = params.travelDays;
+  }
 
   try {
     const response = await api.get('/api/v1/courses/recommendation', { params: requestParams });

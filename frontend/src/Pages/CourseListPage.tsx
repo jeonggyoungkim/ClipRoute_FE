@@ -37,7 +37,7 @@ const CourseListPage = () => {
       fetchRecommendedCourses({
         pageParam,
         regionId: regionId!,
-        travelDays: travelDays! + 1, // 1박 2일 -> 2일
+        travelDays: travelDays !== null ? travelDays + 1 : null,
       }),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => {
@@ -45,7 +45,7 @@ const CourseListPage = () => {
       const { sliceInfo } = lastPage.result;
       return sliceInfo.hasNext ? sliceInfo.currentPage + 1 : undefined;
     },
-    enabled: regionId !== null && travelDays !== null,
+    enabled: regionId !== null,
   });
 
   // IntersectionObserver로 스크롤 감지
@@ -66,10 +66,10 @@ const CourseListPage = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  if (regionId === null || travelDays === null) {
+  if (regionId === null) {
     return (
       <div className="p-10 text-center text-gray-500 font-medium">
-        잘못된 접근입니다. 여행지 및 날짜를 선택해주세요.
+        잘못된 접근입니다. 여행지를 선택해주세요.
       </div>
     );
   }
