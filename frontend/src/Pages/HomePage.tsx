@@ -64,7 +64,7 @@ const HomePage = () => {
     }
 
     console.log("이동 경로:", `/courses?${params.toString()}`);
-    navigate(`/courses?${params.toString()}`);
+    navigate(`/courses/?${params.toString()}`);
   };
 
   const handleBackToMain = () => {

@@ -48,13 +48,21 @@ export const fetchRecommendedCourses = async (
     regionId: params.regionId,
   };
 
+  // 기본적으로 일반 코스 조회 사용 (날짜 없을 때)
+  let endpoint = '/api/v1/courses';
+
   if (params.travelDays !== undefined && params.travelDays !== null) {
+    // 날짜가 있으면 추천 코스 조회 사용
     requestParams.travelDays = params.travelDays;
+    endpoint = '/api/v1/courses/recommendation';
+  } else {
+    // 날짜가 없으면 대표 코스(popular) 모드로 조회
+    requestParams.isRep = false;
   }
 
   try {
-    const response = await api.get('/api/v1/courses/recommendation?regionId', { params: requestParams });
-    console.log('API 응답 성공 (추천)', response.data);
+    const response = await api.get(endpoint, { params: requestParams });
+    console.log(`API 응답 성공 (${endpoint})`, response.data);
     return response.data;
   } catch (error: unknown) {
     handleApiError(error);
