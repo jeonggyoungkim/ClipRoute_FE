@@ -48,17 +48,19 @@ export const fetchRecommendedCourses = async (
     regionId: params.regionId,
   };
 
-  // 기본적으로 일반 코스 조회 사용 (날짜 없을 때)
-  let endpoint = '/api/v1/courses';
+  let endpoint = '/api/v1/courses/recommendation';
 
-  if (params.travelDays !== undefined && params.travelDays !== null) {
-    // 날짜가 있으면 추천 코스 조회 사용
-    requestParams.travelDays = params.travelDays;
-    endpoint = '/api/v1/courses/recommendation';
+  if (params.travelDays === undefined || params.travelDays === null) {
+    // 날짜가 없으면 기본값으로 1박(API에는 0박 1일 -> 1) 설정하거나,
+    // 또는 일반 목록 조회를 사용해야 하는데, 지금 코드는 무조건 recommendation을 호출하려 하므로 
+    // 임시로 값을 채워줍니다.
+    requestParams.travelDays = 1;
   } else {
-    // 날짜가 없으면 대표 코스(popular) 모드로 조회
-    requestParams.isRep = false;
+    requestParams.travelDays = params.travelDays;
   }
+
+  // 만약 날짜 없을 때 일반 목록을 보여주고 싶다면 아래 주석을 해제하고 위 로직을 수정해야 합니다.
+  // 현재 사용자 로직: 무조건 recommendation 호출 + travelDays 없으면 1로 설정
 
   try {
     const response = await api.get(endpoint, { params: requestParams });
